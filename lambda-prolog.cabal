@@ -1,0 +1,233 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.38.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           lambda-prolog
+version:        0.1.0.0
+synopsis:       The lambda-prolog higher-order logic programming language, implemented in Haskell.
+category:       Logic Programming
+homepage:       https://github.com/rybla/lambda-prolog#readme
+bug-reports:    https://github.com/rybla/lambda-prolog/issues
+author:         Henry Blanchette
+maintainer:     contact@rybl.net
+copyright:      2026 Henry Blanchette
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/rybla/lambda-prolog
+
+library
+  exposed-modules:
+      LambdaProlog
+      LambdaProlog.Cli
+  other-modules:
+      Paths_lambda_prolog
+  autogen-modules:
+      Paths_lambda_prolog
+  hs-source-dirs:
+      src
+  default-extensions:
+      DerivingStrategies
+      DeriveGeneric
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      FlexibleContexts
+      FlexibleInstances
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NamedFieldPuns
+      OverloadedStrings
+      PatternSynonyms
+      ScopedTypeVariables
+      StrictData
+      TupleSections
+      TypeApplications
+      ViewPatterns
+      ExistentialQuantification
+      RankNTypes
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Woperator-whitespace
+  build-depends:
+      aeson >=2.2
+    , ansi-terminal >=1.1
+    , base >=4.17 && <5
+    , containers >=0.6
+    , directory >=1.3
+    , filepath >=1.4
+    , haskeline >=0.8
+    , megaparsec >=9.6
+    , mtl >=2.3
+    , optparse-applicative >=0.18
+    , parser-combinators >=1.3
+    , prettyprinter >=1.7
+    , prettyprinter-ansi-terminal >=1.1
+    , raw-strings-qq
+    , text >=2.0
+    , transformers >=0.6
+  default-language: Haskell2010
+
+executable build-website
+  main-is: Main.hs
+  other-modules:
+      Assets
+      Html
+      Paths_lambda_prolog
+  autogen-modules:
+      Paths_lambda_prolog
+  hs-source-dirs:
+      build-website
+  default-extensions:
+      DerivingStrategies
+      DeriveGeneric
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      FlexibleContexts
+      FlexibleInstances
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NamedFieldPuns
+      OverloadedStrings
+      PatternSynonyms
+      ScopedTypeVariables
+      StrictData
+      TupleSections
+      TypeApplications
+      ViewPatterns
+      ExistentialQuantification
+      RankNTypes
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Woperator-whitespace -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , ansi-terminal >=1.1
+    , base >=4.17 && <5
+    , containers
+    , directory
+    , filepath
+    , haskeline >=0.8
+    , lambda-prolog
+    , megaparsec >=9.6
+    , mtl
+    , optparse-applicative
+    , parser-combinators >=1.3
+    , prettyprinter >=1.7
+    , prettyprinter-ansi-terminal >=1.1
+    , raw-strings-qq
+    , text
+    , transformers >=0.6
+  default-language: Haskell2010
+
+executable lambda-prolog
+  main-is: Main.hs
+  other-modules:
+      Paths_lambda_prolog
+  autogen-modules:
+      Paths_lambda_prolog
+  hs-source-dirs:
+      app
+  default-extensions:
+      DerivingStrategies
+      DeriveGeneric
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      FlexibleContexts
+      FlexibleInstances
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NamedFieldPuns
+      OverloadedStrings
+      PatternSynonyms
+      ScopedTypeVariables
+      StrictData
+      TupleSections
+      TypeApplications
+      ViewPatterns
+      ExistentialQuantification
+      RankNTypes
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Woperator-whitespace -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson >=2.2
+    , ansi-terminal >=1.1
+    , base >=4.17 && <5
+    , containers >=0.6
+    , directory >=1.3
+    , filepath >=1.4
+    , haskeline >=0.8
+    , lambda-prolog
+    , megaparsec >=9.6
+    , mtl >=2.3
+    , optparse-applicative >=0.18
+    , parser-combinators >=1.3
+    , prettyprinter >=1.7
+    , prettyprinter-ansi-terminal >=1.1
+    , raw-strings-qq
+    , text >=2.0
+    , transformers >=0.6
+  default-language: Haskell2010
+
+test-suite lambda-prolog-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_lambda_prolog
+  autogen-modules:
+      Paths_lambda_prolog
+  hs-source-dirs:
+      test
+  default-extensions:
+      DerivingStrategies
+      DeriveGeneric
+      DeriveFunctor
+      DeriveFoldable
+      DeriveTraversable
+      FlexibleContexts
+      FlexibleInstances
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      LambdaCase
+      NamedFieldPuns
+      OverloadedStrings
+      PatternSynonyms
+      ScopedTypeVariables
+      StrictData
+      TupleSections
+      TypeApplications
+      ViewPatterns
+      ExistentialQuantification
+      RankNTypes
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Woperator-whitespace -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck >=2.14
+    , aeson >=2.2
+    , ansi-terminal >=1.1
+    , base >=4.17 && <5
+    , containers >=0.6
+    , directory >=1.3
+    , filepath >=1.4
+    , haskeline >=0.8
+    , lambda-prolog
+    , megaparsec >=9.6
+    , mtl >=2.3
+    , optparse-applicative >=0.18
+    , parser-combinators >=1.3
+    , prettyprinter >=1.7
+    , prettyprinter-ansi-terminal >=1.1
+    , raw-strings-qq
+    , tasty >=1.5
+    , tasty-hunit >=0.10
+    , tasty-quickcheck >=0.10
+    , text >=2.0
+    , transformers >=0.6
+  default-language: Haskell2010
