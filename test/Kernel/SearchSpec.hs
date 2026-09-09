@@ -102,6 +102,20 @@ tests =
         let sols = queryN 2 appendProg [MetaId 0, MetaId 1] $
               GAtom ap [x0, x1, list [n1, n2]]
          in assertEqual "capped" 2 (length sols)
+    , testCase "conjunction term is solved as a goal" $
+        -- once (true, true) elaborates the argument as a term headed by ','.
+        assertBool "true, true" $
+          sat emptyProgram $
+            GAtom (bAnd b) [con (bTrue b), con (bTrue b)]
+    , testCase "conjunction term fails if a conjunct fails" $
+        assertBool "fail, true" $
+          not $
+            sat emptyProgram $
+              GAtom (bAnd b) [con (bFail b), con (bTrue b)]
+    , testCase "disjunction term is solved as a goal" $
+        assertBool "fail; true" $
+          sat emptyProgram $
+            GAtom (bOr b) [con (bFail b), con (bTrue b)]
     ]
   where
     b = prelude

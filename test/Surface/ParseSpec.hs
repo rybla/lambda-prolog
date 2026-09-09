@@ -48,12 +48,38 @@ tests =
           Right m -> do
             assertEqual "name" ("lists" :: Text) (identName (modName m))
             assertBool "has decls" (not (null (modDecls m)))
+    , testCase "colon-dash is not a typed lambda" $
+        -- `K :- pi x\ G` used to parse as `K : -pi x \ G`.
+        case parseTerm "-" "p K :- pi x\\ q" of
+          Left e -> fail (show e)
+          Right t ->
+            case mixfixTerm defaultOps t of
+              Left e -> fail (show e)
+              Right t' -> assertBool "uses :-" (hasNeck t')
+    , testCase "nested lambdas" $
+        case parseTerm "-" "x\\ y\\ x" of
+          Left e -> fail (show e)
+          Right (SLam _ x _ (SLam _ y _ _)) -> do
+            assertEqual "outer" ("x" :: Text) (identName x)
+            assertEqual "inner" ("y" :: Text) (identName y)
+          Right t -> fail ("expected nested lambdas, got " ++ show t)
+    , testCase "caret is a symbolic identifier" $
+        case parseTerm "-" "S is \"ab\" ^ \"cd\"" of
+          Left e -> fail (show e)
+          Right t ->
+            case mixfixTerm defaultOps t of
+              Left e -> fail (show e)
+              Right t' -> assertBool "resolved" (isApp t')
     ]
   where
     seqLen (SSeq _ xs) = length xs
     seqLen _ = 1
     isApp SApp {} = True
     isApp _ = False
+    hasNeck t = case t of
+      SApp _ (SApp _ (SId i) _) _ -> identName i == ":-"
+      SApp _ a _ -> hasNeck a
+      _ -> False
     listsFrag :: Text
     listsFrag =
       "module lists.\n\

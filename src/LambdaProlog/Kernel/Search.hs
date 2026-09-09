@@ -15,7 +15,7 @@ import Data.IntMap.Strict qualified as IntMap
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
 import Data.Text qualified as T
 
-import LambdaProlog.Kernel.Builtin (evalArith)
+import LambdaProlog.Kernel.Builtin (Ground (..), evalCmp, evalGround)
 import LambdaProlog.Kernel.Goal
   ( Clause (..)
   , Goal (..)
@@ -40,12 +40,14 @@ import LambdaProlog.Kernel.Term
   , Level (..)
   , MetaId (..)
   , Term (..)
+  , applySpine
   , intLit
   , meta
+  , stringLit
   )
 import LambdaProlog.Kernel.Unify (derefNf, unify, whnf)
 import LambdaProlog.Name (Interner, Name, intern)
-import LambdaProlog.Prelude (Builtins (..), prelude)
+import LambdaProlog.Prelude (Builtins (..), prelude, tyO)
 
 data Solution = Solution
   { solBinds :: IntMap Term
@@ -125,6 +127,136 @@ solve env g sc = case g of
 
 solveAtom :: Env s -> Name -> [Term] -> ST s () -> ST s ()
 solveAtom env p ts sc = do
+  ts' <- mapM (derefNf (envTrail env)) ts
+  let b = prelude
+  if p == bCut b && null ts'
+    then solve env GCut sc
+    else case interpConnective p ts' of
+      Just g -> solve env g sc
+      Nothing ->
+        case builtinAtom p ts' of
+          Just True -> sc
+          Just False -> invokeFail env
+          Nothing -> solveAtomClauses env p ts sc
+
+-- | Reinterpret a constant applied to arguments as a logical connective.
+-- This is what makes higher-order goal arguments work: @once (true, true)@
+-- instantiates a meta to the term @',' true true@, which must be solved as
+-- a conjunction, not looked up as a user predicate named @,@.
+interpConnective :: Name -> [Term] -> Maybe Goal
+interpConnective p ts =
+  let b = prelude
+   in if p == bTrue b && null ts
+        then Just GTrue
+        else
+          if p == bFail b && null ts
+            then Just GFail
+            else
+              if p == bCut b && null ts
+                then Just GCut
+                else
+                  if p == bAnd b
+                    then case ts of
+                      [a, c] -> Just (GAnd (goalOfTerm a) (goalOfTerm c))
+                      _ -> Nothing
+                    else
+                      if p == bOr b
+                        then case ts of
+                          [a, c] -> Just (GOr (goalOfTerm a) (goalOfTerm c))
+                          _ -> Nothing
+                        else
+                          if p == bImpl b
+                            then case ts of
+                              [d, g] -> Just (GImpl (clausesOfTerm d) (goalOfTerm g))
+                              _ -> Nothing
+                            else
+                              if p == bEq b
+                                then case ts of
+                                  [a, c] -> Just (GEq a c)
+                                  _ -> Nothing
+                                else
+                                  if p == bIs b
+                                    then case ts of
+                                      [a, c] -> Just (GIs a c)
+                                      _ -> Nothing
+                                    else
+                                      if p == bNot b
+                                        then case ts of
+                                          [g] -> Just (GNot (goalOfTerm g))
+                                          _ -> Nothing
+                                        else
+                                          if p == bPi b
+                                            then case ts of
+                                              [f] -> Just (piGoal f)
+                                              _ -> Nothing
+                                            else
+                                              if p == bSigma b
+                                                then case ts of
+                                                  [f] -> Just (sigmaGoal f)
+                                                  _ -> Nothing
+                                                else Nothing
+
+-- | Read a kernel term as a goal. Used when a connective’s argument is itself
+-- a compound formula (a term, not already a 'Goal').
+goalOfTerm :: Term -> Goal
+goalOfTerm (TLam _) = GFail
+goalOfTerm (TApp h ts) = case h of
+  HConst p -> case interpConnective p ts of
+    Just g -> g
+    Nothing -> GAtom p ts
+  HMeta m -> GFlex m ts
+  HBound _ -> GFail
+  HLit _ -> GFail
+
+-- | @pi@ (and n-ary @pi x y\\ …@) over a functional term.
+piGoal :: Term -> Goal
+piGoal f =
+  GForall tyO $ \e ->
+    case applySpine f [e] of
+      t@(TLam _) -> piGoal t
+      t -> goalOfTerm t
+
+sigmaGoal :: Term -> Goal
+sigmaGoal f =
+  GExists tyO $ \e ->
+    case applySpine f [e] of
+      t@(TLam _) -> sigmaGoal t
+      t -> goalOfTerm t
+
+-- | Left-hand side of @=>@: a clause, or a comma-separated list of clauses.
+clausesOfTerm :: Term -> [Clause]
+clausesOfTerm t = case t of
+  TApp (HConst p) [a, b]
+    | p == bAnd prelude -> clausesOfTerm a ++ clausesOfTerm b
+    | p == bDCut prelude -> [clauseHead a (goalOfTerm b)]
+  _ -> [clauseHead t GTrue]
+
+clauseHead :: Term -> Goal -> Clause
+clauseHead (TApp (HConst p) args) body = Clause p 0 args body
+clauseHead _ _ = Clause (bFail prelude) 0 [] GFail
+
+-- | @Just True@/@Just False@ means the atom is a builtin that succeeded or
+-- failed. @Nothing@ means it is an ordinary predicate.
+builtinAtom :: Name -> [Term] -> Maybe Bool
+builtinAtom p ts =
+  let b = prelude
+   in if p == bTrue b && null ts
+        then Just True
+        else
+          if p == bFail b && null ts
+            then Just False
+            else
+              if p == bCut b && null ts
+                then Nothing -- cut must go through GCut to adjust the fail register
+                else
+                  if p == bLt b || p == bGt b || p == bLe b || p == bGe b
+                    then case ts of
+                      [a, c] -> evalCmp p a c
+                      _ -> Just False
+                    else Nothing
+
+solveAtomClauses :: Env s -> Name -> [Term] -> ST s () -> ST s ()
+solveAtomClauses env p ts sc = do
   prog <- readSTRef (envProg env)
   let cs = lookupClauses p prog
   oldFail <- readSTRef (envFail env)
@@ -216,9 +348,10 @@ solveUnify env a b sc = do
 solveIs :: Env s -> Term -> Term -> ST s () -> ST s ()
 solveIs env lhs rhs sc = do
   rhs' <- derefNf (envTrail env) rhs
-  case evalArith rhs' of
+  case evalGround rhs' of
     Nothing -> invokeFail env
-    Just n -> solveUnify env lhs (intLit n) sc
+    Just (GInt n) -> solveUnify env lhs (intLit n) sc
+    Just (GString s) -> solveUnify env lhs (stringLit s) sc
 
 solveNot :: Env s -> Goal -> ST s () -> ST s ()
 solveNot env g sc = do
@@ -242,8 +375,13 @@ solveFlex env m ts sc = do
   t <- whnf (envTrail env) (TApp (HMeta m) ts)
   case t of
     TApp (HConst p) ts' -> solveAtom env p ts' sc
-    TApp (HMeta _) _ -> invokeFail env
-    _ -> invokeFail env
+    TApp (HMeta m') ts' ->
+      if m' == m
+        then invokeFail env
+        else solveFlex env m' ts' sc
+    TApp (HBound _) _ -> invokeFail env
+    TApp (HLit _) _ -> invokeFail env
+    TLam _ -> invokeFail env
 
 freeze :: Trail s -> [MetaId] -> ST s Solution
 freeze tr qvars = do

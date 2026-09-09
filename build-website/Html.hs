@@ -107,6 +107,16 @@ page root title description body =
                 ]
               </> voidEl
                 "link"
+                [ ("rel", "preconnect")
+                , ("href", "https://fonts.googleapis.com")
+                ]
+              </> voidEl
+                "link"
+                [ ("rel", "stylesheet")
+                , ("href", "https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&family=STIX+Two+Math&display=swap")
+                ]
+              </> voidEl
+                "link"
                 [ ("rel", "stylesheet")
                 , ("href", root <> "css/site.css")
                 ]
@@ -115,6 +125,10 @@ page root title description body =
             "body"
             []
             ( body
+                </> el
+                  "footer"
+                  []
+                  (txt "λProlog — higher-order hereditary Harrop programs")
                 </> el_ "div" [("id", "tip"), ("role", "tooltip"), ("hidden", "hidden")]
                 </> el "script" [("src", root <> "js/site.js")] emptyH
             )

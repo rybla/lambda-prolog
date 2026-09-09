@@ -8,10 +8,12 @@ module LambdaProlog.Surface.Elab
   ) where
 
 import Control.Monad (foldM)
+import Control.Monad.State (State, evalState, get, put)
 import Data.Char (isUpper)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text, uncons)
+import Data.Text qualified as T
 
 import LambdaProlog.Error (Error, mkError)
 import LambdaProlog.Kernel.Goal
@@ -41,10 +43,8 @@ import LambdaProlog.Name (Interner, Name, intern, lookupName)
 import LambdaProlog.Prelude
   ( Builtins (..)
   , prelude
-  , tyInt
   , tyList
   , tyO
-  , tyString
   )
 import LambdaProlog.Surface.Fixity (defaultOps, mixfixModule, mixfixTerm)
 import LambdaProlog.Surface.Syntax
@@ -97,7 +97,7 @@ elabModule m0 = do
 
 elabQuery :: Sig -> STerm -> Either Error ([MetaId], Goal)
 elabQuery sg t0 = do
-  t <- mixfixTerm defaultOps t0
+  t <- mixfixTerm defaultOps (renameWildcards t0)
   let frees = freeVars t
       mapping = zip frees (map MetaId [0 ..])
       env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping])
@@ -199,8 +199,9 @@ elabDeclClause sg prog d = case d of
   _ -> Right prog
 
 elabTopClause :: Sig -> STerm -> Either Error Clause
-elabTopClause sg t =
-  let (hd, body) = splitNeck t
+elabTopClause sg t0 =
+  let t = renameWildcards t0
+      (hd, body) = splitNeck t
       frees = freeVars t
       mapping = zip frees (map MetaId [0 ..])
       env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping])
@@ -250,8 +251,8 @@ elabGoal sg env t
   | SId i <- t, identName i == "true" = Right GTrue
   | SId i <- t, identName i == "fail" = Right GFail
   | SId i <- t, identName i == "!" = Right GCut
-  | Just (x, mty, body) <- viewPi t = elabPi sg env x mty body
-  | Just (x, mty, body) <- viewSigma t = elabSigma sg env x mty body
+  | Just (bs, body) <- viewPi t = elabBinders GForall sg env bs body
+  | Just (bs, body) <- viewSigma t = elabBinders GExists sg env bs body
   | SApp _ (SId i) g <- t, identName i == "not" =
       GNot <$> elabGoal sg env g
   | otherwise = do
@@ -273,25 +274,30 @@ elabGoal sg env t
               Right (GAtom p as)
         _ -> Left (mkError "not a goal")
 
-elabPi :: Sig -> EEnv -> Ident -> Maybe SType -> STerm -> Either Error Goal
-elabPi sg env x _mty body = do
-  let (ph, intern') = intern ("#pi-" <> identName x) (sigInterner sg)
-      sg' = sg {sigInterner = intern'}
-      env' = env {eeBound = Map.insert (identName x) (con ph) (eeBound env)}
-  g <- elabGoal sg' env' body
-  pure $
-    GForall tyO $ \e ->
-      mapGoal (substConst ph e) g
+peelLams :: STerm -> ([(Ident, Maybe SType)], STerm)
+peelLams (SLam _ x ty b) =
+  let (xs, r) = peelLams b
+   in ((x, ty) : xs, r)
+peelLams t = ([], t)
 
-elabSigma :: Sig -> EEnv -> Ident -> Maybe SType -> STerm -> Either Error Goal
-elabSigma sg env x _mty body = do
-  let (ph, intern') = intern ("#sig-" <> identName x) (sigInterner sg)
+elabBinders ::
+  (Type -> (Term -> Goal) -> Goal) ->
+  Sig ->
+  EEnv ->
+  [(Ident, Maybe SType)] ->
+  STerm ->
+  Either Error Goal
+elabBinders _ _ _ [] _ = Left (mkError "empty binder list")
+elabBinders wrap sg env ((x, _) : xs) body = do
+  let (ph, intern') = intern ("#bnd-" <> identName x) (sigInterner sg)
       sg' = sg {sigInterner = intern'}
       env' = env {eeBound = Map.insert (identName x) (con ph) (eeBound env)}
-  g <- elabGoal sg' env' body
+  inner <- case xs of
+    [] -> elabGoal sg' env' body
+    _ -> elabBinders wrap sg' env' xs body
   pure $
-    GExists tyO $ \e ->
-      mapGoal (substConst ph e) g
+    wrap tyO $ \e ->
+      mapGoal (substConst ph e) inner
 
 elabHyps :: Sig -> EEnv -> STerm -> Either Error [Clause]
 elabHyps sg env t
@@ -302,8 +308,9 @@ elabHyps sg env t
       Right [c]
 
 elabHypClause :: Sig -> EEnv -> STerm -> Either Error Clause
-elabHypClause sg env t = do
-  let (hd, body) = splitNeck t
+elabHypClause sg env t0 = do
+  let t = renameWildcards t0
+      (hd, body) = splitNeck t
       locals = freeVars t
       mapping = zip locals (map MetaId [0 ..])
       env' =
@@ -368,15 +375,32 @@ viewApps = go []
     go acc (SApp _ f a) = go (a : acc) f
     go acc t = (t, acc)
 
-viewPi :: STerm -> Maybe (Ident, Maybe SType, STerm)
+-- | @pi x\\ G@, nested @pi x\\ y\\ G@, and ELPI-style @pi x y\\ G@.
+viewPi :: STerm -> Maybe ([(Ident, Maybe SType)], STerm)
 viewPi t = case viewApps t of
-  (SId i, [SLam _ x ty b]) | identName i == "pi" -> Just (x, ty, b)
+  (SId i, args) | identName i == "pi" -> viewNaryBinders args
   _ -> Nothing
 
-viewSigma :: STerm -> Maybe (Ident, Maybe SType, STerm)
+viewSigma :: STerm -> Maybe ([(Ident, Maybe SType)], STerm)
 viewSigma t = case viewApps t of
-  (SId i, [SLam _ x ty b]) | identName i == "sigma" -> Just (x, ty, b)
+  (SId i, args) | identName i == "sigma" -> viewNaryBinders args
   _ -> Nothing
+
+-- | Split @x y (z\\ G)@ into binders @[x,y,z]@ and body @G@. A lone
+-- non-λ argument (@pi F@) is left to higher-order search.
+viewNaryBinders :: [STerm] -> Maybe ([(Ident, Maybe SType)], STerm)
+viewNaryBinders args =
+  let (ids, rest) = span isBinderId args
+      leading = [(i, Nothing) | SId i <- ids]
+   in case rest of
+        [fn@SLam {}] ->
+          let (more, body) = peelLams fn
+           in Just (leading ++ more, body)
+        _ -> Nothing
+
+isBinderId :: STerm -> Bool
+isBinderId (SId _) = True
+isBinderId _ = False
 
 substConst :: Name -> Term -> Term -> Term
 substConst n e (TLam t) = TLam (substConst n e t)
@@ -426,3 +450,26 @@ freeVars = go []
 nub :: (Eq a) => [a] -> [a]
 nub [] = []
 nub (x : xs) = x : nub (filter (/= x) xs)
+
+-- | Each anonymous @_@ becomes a distinct logic variable.
+renameWildcards :: STerm -> STerm
+renameWildcards t = evalState (rw t) (0 :: Int)
+
+rw :: STerm -> State Int STerm
+rw t = case t of
+  SId i
+    | identName i == "_" -> do
+        n <- get
+        put (n + 1)
+        pure (SId i {identName = "_W" <> packInt n})
+    | otherwise -> pure t
+  SSeq sp xs -> SSeq sp <$> mapM rw xs
+  SApp sp a b -> SApp sp <$> rw a <*> rw b
+  SLam sp x ty b -> SLam sp x ty <$> rw b
+  SList sp es tl -> SList sp <$> mapM rw es <*> traverse rw tl
+  SParen sp a -> SParen sp <$> rw a
+  SAnn sp a ty -> SAnn sp <$> rw a <*> pure ty
+  _ -> pure t
+
+packInt :: Int -> Text
+packInt n = T.pack (show n)

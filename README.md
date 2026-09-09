@@ -78,7 +78,26 @@ Module accumulation is source-level inlining, which is the logical reading of mo
 
 ## Examples
 
-See `examples/`. The tutorial covers syntax; `hypothetical.mod`, `hidden_reverse.mod`, `typeinf.mod`, and `prenex.mod` are the ones that actually use nested programs (`pi` / `=>`) and HOAS.
+`examples/` is a small standard library as well as a tutorial:
+
+| File | Contents |
+|---|---|
+| `tutorial.mod` | Guided tour of Horn clauses, `=>`, `pi`, and HOAS |
+| `lists.mod` | append, reverse, member, length, nth, zip, permute, … |
+| `maps.mod` | mapfun, mappred, foldr, foldl, filter, partition |
+| `control.mod` | once, ifte, call, ignore |
+| `nat.mod` | min, max, abs, gcd, pow, even, odd |
+| `sets.mod` | subset, union, intersect, difference |
+| `assoc.mod` | lookup, update, delassoc |
+| `trees.mod` | binary trees: member, size, flatten, map |
+| `strings.mod` | concatenation via `is` / `^` |
+| `prenex.mod` | object formulas, nnf, prenex form |
+| `hoas_lambda.mod` | untyped λ-calculus: eval, copy, subst, beta, size |
+| `typeinf.mod` | STLC type inference |
+| `tacticals.mod` | tactics and tacticals |
+| `hypothetical.mod`, `hidden_reverse.mod` | nested programs (`=>`) |
+
+Hover any token on the generated website for its role.
 
 ## References
 

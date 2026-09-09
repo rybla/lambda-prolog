@@ -11,6 +11,7 @@ import Kernel.UnifySpec qualified
 import Examples.ExamplesSpec qualified
 import Surface.ElabSpec qualified
 import Surface.ParseSpec qualified
+import WebsiteSpec qualified
 
 main :: IO ()
 main =
@@ -25,4 +26,5 @@ main =
       , Surface.ParseSpec.tests
       , Surface.ElabSpec.tests
       , Examples.ExamplesSpec.tests
+      , WebsiteSpec.tests
       ]

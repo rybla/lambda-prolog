@@ -17,4 +17,25 @@ and this project adheres to the
 
 ## 0.2.0.0
 
-TODO
+### Added
+
+- Example programs expanded into a small standard library: lists, maps/folds,
+  control, integers, finite sets, association lists, binary trees, strings,
+  formulas (nnf + prenex), HOAS λ-calculus, STLC type inference, and tacticals
+- Builtin integer comparison goals (`<`, `>`, `=<`, `>=`) and string
+  concatenation via `is` / `^`
+- Anonymous `_` wildcards; n-ary `pi` / `sigma` (`pi x y\ G` and `pi x\ y\ G`)
+- Website: hover tips on keywords, types, punctuation, binders, and comment
+  metadata keys (`title:`, `tags:`, `summary:`)
+- Website visual language: high-contrast colours, 1px dark rules, square
+  corners, STIX / math fonts
+
+### Fixed
+
+- `:-` after a capital identifier was parsed as a typed λ (`K : -pi x\ …`)
+- `prefix` as a user predicate collided with the mixfix keyword
+- `true` / `fail` used as higher-order goal arguments (`once true`) did not
+  succeed or fail as goals
+- Compound goal terms (`once (true, true)`, `once (pi x\ …)`) were searched
+  as ordinary atoms instead of being reread as connectives
+- `^` was not a symbolic identifier, so `"ab" ^ "cd"` would not parse

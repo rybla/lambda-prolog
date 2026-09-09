@@ -138,7 +138,7 @@ pSymbolicRaw :: Parser Text
 pSymbolicRaw = T.pack <$> some (satisfy isSym)
   where
     -- Intentionally not ',' ';' '|' '\\' — those are separators / binders.
-    isSym c = c `elem` ("+-*/<=>&@#`~?!$:" :: String)
+    isSym c = c `elem` ("+-*/<=>&@#`~?!$:^" :: String)
 
 pIdent :: Parser Ident
 pIdent = lexeme $ do
@@ -364,7 +364,12 @@ pKindAtom :: Parser SKind
 pKindAtom =
   choice
     [ do
-        (sp, _) <- withSpan (pKeyword "type")
+        -- Span the word only (not the trailing space that 'lexeme' would eat)
+        -- so it coincides with the lexical keyword mark.
+        (sp, _) <- withSpan $ try $ do
+          _ <- string "type"
+          notFollowedBy (satisfy isIdentCont)
+        sc
         pure (SKType sp)
     , between (symbol "(") (symbol ")") pKind
     ]
@@ -428,11 +433,19 @@ pLam = do
   file <- sourceName <$> getSourcePos
   start <- getSourcePos
   x <- pIdent
-  ty <- optional (symbol ":" *> pType)
+  ty <- optional (pAscribeColon *> pType)
   _ <- symbol "\\"
   body <- pTerm
   end <- getSourcePos
   pure (SLam (mkSpan file start end) x ty body)
+
+-- | Type ascription colon, not the start of @:-@.
+pAscribeColon :: Parser Text
+pAscribeColon =
+  lexeme . try $ do
+    _ <- char ':'
+    notFollowedBy (char '-')
+    pure ":"
 
 pAtom :: Parser STerm
 pAtom = pAtomNoSep <|> (SId <$> pCommaSemi)

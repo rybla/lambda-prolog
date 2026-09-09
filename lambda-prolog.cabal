@@ -5,7 +5,7 @@ cabal-version: 2.2
 -- see: https://github.com/sol/hpack
 
 name:           lambda-prolog
-version:        0.1.0.0
+version:        0.2.0.0
 synopsis:       The lambda-prolog higher-order logic programming language, implemented in Haskell.
 category:       Logic Programming
 homepage:       https://github.com/rybla/lambda-prolog#readme
@@ -19,13 +19,19 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
+    examples/assoc.mod
+    examples/control.mod
     examples/hidden_reverse.mod
     examples/hoas_lambda.mod
     examples/hypothetical.mod
     examples/lists.mod
     examples/maps.mod
+    examples/nat.mod
     examples/prenex.mod
+    examples/sets.mod
+    examples/strings.mod
     examples/tacticals.mod
+    examples/trees.mod
     examples/tutorial.mod
     examples/typeinf.mod
 
@@ -222,6 +228,7 @@ test-suite lambda-prolog-test
       Kernel.UnifySpec
       Surface.ElabSpec
       Surface.ParseSpec
+      WebsiteSpec
       Paths_lambda_prolog
   autogen-modules:
       Paths_lambda_prolog

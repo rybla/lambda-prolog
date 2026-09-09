@@ -1,12 +1,23 @@
--- | Evaluable arithmetic and comparison for the @is@ builtin.
+-- | Evaluable arithmetic, strings, and comparison for builtins.
 module LambdaProlog.Kernel.Builtin
-  ( evalArith
+  ( Ground (..)
+  , evalArith
+  , evalString
+  , evalGround
   , cmpInt
+  , evalCmp
   ) where
+
+import Data.Text (Text)
 
 import LambdaProlog.Kernel.Term (Head (..), Lit (..), Term (..))
 import LambdaProlog.Name (Name)
 import LambdaProlog.Prelude (Builtins (..), prelude)
+
+data Ground
+  = GInt Integer
+  | GString Text
+  deriving stock (Eq, Show)
 
 -- | Evaluate a ground arithmetic expression to an integer.
 evalArith :: Term -> Maybe Integer
@@ -31,6 +42,18 @@ evalArith (TApp (HConst c) args) =
         _ -> Nothing
 evalArith _ = Nothing
 
+evalString :: Term -> Maybe Text
+evalString (TApp (HLit (LString s)) []) = Just s
+evalString (TApp (HConst c) [x, y])
+  | c == bConcat prelude = (<>) <$> evalString x <*> evalString y
+evalString _ = Nothing
+
+evalGround :: Term -> Maybe Ground
+evalGround t =
+  case evalArith t of
+    Just n -> Just (GInt n)
+    Nothing -> GString <$> evalString t
+
 cmpInt :: Name -> Integer -> Integer -> Maybe Bool
 cmpInt op a b =
   let p = prelude
@@ -46,3 +69,11 @@ cmpInt op a b =
                   if op == bGe p
                     then Just (a >= b)
                     else Nothing
+
+-- | Evaluate a comparison predicate on two (already dereferenced) terms.
+evalCmp :: Name -> Term -> Term -> Maybe Bool
+evalCmp op a b = do
+  x <- evalArith a
+  y <- evalArith b
+  cmpInt op x y
+

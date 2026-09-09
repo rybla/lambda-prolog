@@ -148,12 +148,18 @@ examplePage ex =
             <> el
               "p"
               [("class", "legend")]
-              ( legend "lp-pred" "predicate"
-                  <> legend "lp-var" "logic variable"
+              ( legend "lp-kw" "keyword"
+                  <> legend "lp-pred" "predicate"
+                  <> legend "lp-ty" "type"
+                  <> legend "lp-tyvar" "type variable"
+                  <> legend "lp-var" "variable"
                   <> legend "lp-binder" "binder"
+                  <> legend "lp-const" "constant"
                   <> legend "lp-op" "operator"
-                  <> legend "lp-pi" "pi / sigma"
+                  <> legend "lp-pi" "pi"
                   <> legend "lp-impl" "=>"
+                  <> legend "lp-punct" "punctuation"
+                  <> legend "lp-key" "title:"
               )
             <> highlight ("examples/" ++ exFile ex) (exSrc ex)
         )
