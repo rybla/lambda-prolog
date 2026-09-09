@@ -14,3 +14,7 @@ and this project adheres to the
 - CLI and REPL (`lambda-prolog`)
 - Example programs under `examples/`
 - Static website builder (`build-website`) with semantic highlighting
+
+## 0.2.0.0
+
+TODO
