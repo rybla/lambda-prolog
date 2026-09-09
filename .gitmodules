@@ -1,0 +1,6 @@
+[submodule "references/teyjus"]
+	path = references/teyjus
+	url = git@github.com:teyjus/teyjus.git
+[submodule "references/elpi"]
+	path = references/elpi
+	url = git@github.com:LPCIC/elpi.git
