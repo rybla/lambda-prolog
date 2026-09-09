@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Higher-order maps — λProlog</title>
+<meta name="description" content="mappred and mapfun take a predicate or function as an argument.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>Higher-order maps</h1><p>mappred and mapfun take a predicate or function as an argument.</p><p class="muted">maps.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: Higher-order maps
+% tags: higher-order, predicates
+% summary: mappred and mapfun take a predicate or function as an argument.
+
+module maps.
+
+type <span class="lp-pred" data-tip="predicate mappred" tabindex="0">mappred</span>  (A -&gt; B -&gt; o) -&gt; list A -&gt; list B -&gt; o.
+type <span class="lp-pred" data-tip="predicate mapfun" tabindex="0">mapfun</span>   (A -&gt; B) -&gt; list A -&gt; list B -&gt; o.
+type <span class="lp-pred" data-tip="predicate age" tabindex="0">age</span>      string -&gt; int -&gt; o.
+
+<span class="lp-const" data-tip="constant mappred" tabindex="0">mappred</span> <span class="lp-var" data-tip="logic variable P" tabindex="0">P</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span>.
+<span class="lp-const" data-tip="constant mappred" tabindex="0">mappred</span> <span class="lp-var" data-tip="logic variable P" tabindex="0">P</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>) (<span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span>) <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-var" data-tip="logic variable P" tabindex="0">P</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant mappred" tabindex="0">mappred</span> <span class="lp-var" data-tip="logic variable P" tabindex="0">P</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span>.
+
+<span class="lp-const" data-tip="constant mapfun" tabindex="0">mapfun</span> <span class="lp-var" data-tip="logic variable F" tabindex="0">F</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span>.
+<span class="lp-const" data-tip="constant mapfun" tabindex="0">mapfun</span> <span class="lp-var" data-tip="logic variable F" tabindex="0">F</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>) ((<span class="lp-var" data-tip="logic variable F" tabindex="0">F</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span>) <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span>) <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant mapfun" tabindex="0">mapfun</span> <span class="lp-var" data-tip="logic variable F" tabindex="0">F</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span>.
+
+<span class="lp-const" data-tip="constant age" tabindex="0">age</span> <span class="lp-lit" data-tip="string literal" tabindex="0">"bob"</span> <span class="lp-lit" data-tip="integer literal" tabindex="0">30</span>.
+<span class="lp-const" data-tip="constant age" tabindex="0">age</span> <span class="lp-lit" data-tip="string literal" tabindex="0">"sue"</span> <span class="lp-lit" data-tip="integer literal" tabindex="0">24</span>.
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>λProlog in Haskell</title>
+<meta name="description" content="A higher-order hereditary Harrop interpreter">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/site.css"></head>
+<body><header><nav><a href="index.html">λProlog</a> · <a href="examples/index.html">Examples</a></nav></header><main><h1>λProlog</h1><p>A Haskell interpreter for the higher-order hereditary Harrop fragment of λProlog: simply-typed λ-terms, pattern unification, and uniform proof search with <code>pi</code> and <code>=&gt;</code>.</p><h2>What this is</h2><p>Hereditary Harrop formulas extend Horn clauses with implication and universal quantification in goals. Operationally that means a program is not a flat clause store: proving <code>D =&gt; G</code> installs <code>D</code> for the duration of <code>G</code>, and proving <code>pi x\ G</code> introduces a fresh eigenvariable. Nested programs and signatures are the hierarchical structure unique to this language.</p><h2>Build</h2><pre class="src">stack build
+stack test
+stack run lambda-prolog -- examples/lists.mod
+stack run build-website</pre><p><a href="examples/index.html">Browse the examples</a> — hover any token on an example page for its role.</p><h2>References</h2><ul><li><a href="https://sites.google.com/site/proghol/">Programming with Higher-Order Logic</a> — Miller &amp; Nadathur</li><li><a href="https://teyjus.cs.umn.edu">Teyjus</a></li><li><a href="https://github.com/LPCIC/elpi">ELPI</a></li></ul></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="js/site.js"></script></body></html>

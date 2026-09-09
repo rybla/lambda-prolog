@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutorial — λProlog</title>
+<meta name="description" content="A walk through λProlog syntax, lists, and the scoping primitives pi and =&gt;.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>Tutorial</h1><p>A walk through λProlog syntax, lists, and the scoping primitives pi and =&gt;.</p><p class="muted">tutorial.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: Tutorial
+% tags: intro, lists, pi, implication
+% summary: A walk through λProlog syntax, lists, and the scoping primitives pi and =&gt;.
+
+module tutorial.
+
+% First-order Horn clauses look like Prolog, but terms are simply typed
+% and fully curried.
+
+type <span class="lp-pred" data-tip="predicate append" tabindex="0">append</span>  list A -&gt; list A -&gt; list A -&gt; o.
+
+<span class="lp-const" data-tip="constant append" tabindex="0">append</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>.
+<span class="lp-const" data-tip="constant append" tabindex="0">append</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>) <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span>) <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant append" tabindex="0">append</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span>.
+
+% Implication (=&gt;) adds a clause for the duration of a goal. This is
+% hypothetical reasoning: "if we had edge a b, could we prove path a c?"
+
+type <span class="lp-pred" data-tip="predicate edge" tabindex="0">edge</span>    A -&gt; A -&gt; o.
+type <span class="lp-pred" data-tip="predicate path" tabindex="0">path</span>    A -&gt; A -&gt; o.
+
+<span class="lp-const" data-tip="constant path" tabindex="0">path</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant edge" tabindex="0">edge</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span>.
+<span class="lp-const" data-tip="constant path" tabindex="0">path</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Z" tabindex="0">Z</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant edge" tabindex="0">edge</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant path" tabindex="0">path</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span> <span class="lp-var" data-tip="logic variable Z" tabindex="0">Z</span>.
+
+% Universal goals (pi) introduce a fresh eigenvariable. Combined with
+% implication this is the characteristic "hierarchical" structure of
+% hereditary Harrop programs: a local signature and a local program.
+
+type <span class="lp-pred" data-tip="predicate ident" tabindex="0">ident</span>   A -&gt; A -&gt; o.
+<span class="lp-const" data-tip="constant ident" tabindex="0">ident</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span>.
+
+% Try:
+%   ?- append (1 :: 2 :: nil) (3 :: nil) L.
+%   ?- edge a b =&gt; edge b c =&gt; path a c.
+%   ?- pi x\ ident x x.
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>

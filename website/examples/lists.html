@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lists — λProlog</title>
+<meta name="description" content="Classic list programs — append, reverse, member — as first-order Horn clauses.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>Lists</h1><p>Classic list programs — append, reverse, member — as first-order Horn clauses.</p><p class="muted">lists.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: Lists
+% tags: horn, lists
+% summary: Classic list programs — append, reverse, member — as first-order Horn clauses.
+
+module lists.
+
+type <span class="lp-pred" data-tip="predicate append" tabindex="0">append</span>   list A -&gt; list A -&gt; list A -&gt; o.
+type <span class="lp-pred" data-tip="predicate reverse" tabindex="0">reverse</span>  list A -&gt; list A -&gt; o.
+type <span class="lp-pred" data-tip="predicate member" tabindex="0">member</span>   A -&gt; list A -&gt; o.
+
+<span class="lp-const" data-tip="constant append" tabindex="0">append</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>.
+<span class="lp-const" data-tip="constant append" tabindex="0">append</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>) <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span>) <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant append" tabindex="0">append</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span>.
+
+<span class="lp-const" data-tip="constant reverse" tabindex="0">reverse</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span>.
+<span class="lp-const" data-tip="constant reverse" tabindex="0">reverse</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>) <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant reverse" tabindex="0">reverse</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant append" tabindex="0">append</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span>) <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span>.
+
+<span class="lp-const" data-tip="constant member" tabindex="0">member</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>).
+<span class="lp-const" data-tip="constant member" tabindex="0">member</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> (<span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>) <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant member" tabindex="0">member</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span>.
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>

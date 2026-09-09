@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hypothetical reasoning — λProlog</title>
+<meta name="description" content="Graph reachability by hypothetically adding edges with =&gt;.">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>Hypothetical reasoning</h1><p>Graph reachability by hypothetically adding edges with =&gt;.</p><p class="muted">hypothetical.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: Hypothetical reasoning
+% tags: implication, hierarchy
+% summary: Graph reachability by hypothetically adding edges with =&gt;.
+
+module hypothetical.
+
+kind <span class="lp-ty" data-tip="type constructor node" tabindex="0">node</span>  type.
+
+type <span class="lp-pred" data-tip="predicate a" tabindex="0">a</span>, <span class="lp-pred" data-tip="predicate b" tabindex="0">b</span>, <span class="lp-pred" data-tip="predicate c" tabindex="0">c</span>, <span class="lp-pred" data-tip="predicate d" tabindex="0">d</span>    node.
+type <span class="lp-pred" data-tip="predicate edge" tabindex="0">edge</span>          node -&gt; node -&gt; o.
+type <span class="lp-pred" data-tip="predicate path" tabindex="0">path</span>          node -&gt; node -&gt; o.
+
+<span class="lp-const" data-tip="constant path" tabindex="0">path</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant edge" tabindex="0">edge</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span>.
+<span class="lp-const" data-tip="constant path" tabindex="0">path</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Z" tabindex="0">Z</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant edge" tabindex="0">edge</span> <span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant path" tabindex="0">path</span> <span class="lp-var" data-tip="logic variable Y" tabindex="0">Y</span> <span class="lp-var" data-tip="logic variable Z" tabindex="0">Z</span>.
+
+% A base graph: a → b → d. Adding edge b c hypothetically unlocks a → c.
+<span class="lp-const" data-tip="constant edge" tabindex="0">edge</span> <span class="lp-const" data-tip="constant a" tabindex="0">a</span> <span class="lp-const" data-tip="constant b" tabindex="0">b</span>.
+<span class="lp-const" data-tip="constant edge" tabindex="0">edge</span> <span class="lp-const" data-tip="constant b" tabindex="0">b</span> <span class="lp-const" data-tip="constant d" tabindex="0">d</span>.
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>

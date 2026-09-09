@@ -8,4 +8,9 @@ and this project adheres to the
 
 ### Added
 
-**TODO**
+- Kernel: simply-typed spine terms, de Bruijn substitution, higher-order
+  pattern unification, uniform proof search for hereditary Harrop goals
+- Surface language: Teyjus-style parser, mixfix, elaboration, `accumulate`
+- CLI and REPL (`lambda-prolog`)
+- Example programs under `examples/`
+- Static website builder (`build-website`) with semantic highlighting

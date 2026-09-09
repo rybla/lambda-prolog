@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HOAS evaluator — λProlog</title>
+<meta name="description" content="Untyped λ-calculus encoded with higher-order abstract syntax;">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>HOAS evaluator</h1><p>Untyped λ-calculus encoded with higher-order abstract syntax;</p><p class="muted">hoas_lambda.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: HOAS evaluator
+% tags: hoas, beta, lambda
+% summary: Untyped λ-calculus encoded with higher-order abstract syntax;
+%   substitution is meta-level β-reduction.
+
+module hoas_lambda.
+
+kind <span class="lp-ty" data-tip="type constructor tm" tabindex="0">tm</span>  type.
+
+type <span class="lp-pred" data-tip="predicate app" tabindex="0">app</span>   tm -&gt; tm -&gt; tm.
+type <span class="lp-pred" data-tip="predicate abs" tabindex="0">abs</span>   (tm -&gt; tm) -&gt; tm.
+type <span class="lp-pred" data-tip="predicate eval" tabindex="0">eval</span>  tm -&gt; tm -&gt; o.
+
+<span class="lp-const" data-tip="constant eval" tabindex="0">eval</span> (<span class="lp-const" data-tip="constant app" tabindex="0">app</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span> <span class="lp-var" data-tip="logic variable N" tabindex="0">N</span>) <span class="lp-var" data-tip="logic variable V" tabindex="0">V</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant eval" tabindex="0">eval</span> <span class="lp-var" data-tip="logic variable M" tabindex="0">M</span> (<span class="lp-const" data-tip="constant abs" tabindex="0">abs</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span>)<span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant eval" tabindex="0">eval</span> <span class="lp-var" data-tip="logic variable N" tabindex="0">N</span> <span class="lp-var" data-tip="logic variable U" tabindex="0">U</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant eval" tabindex="0">eval</span> (<span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-var" data-tip="logic variable U" tabindex="0">U</span>) <span class="lp-var" data-tip="logic variable V" tabindex="0">V</span>.
+<span class="lp-const" data-tip="constant eval" tabindex="0">eval</span> (<span class="lp-const" data-tip="constant abs" tabindex="0">abs</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span>) (<span class="lp-const" data-tip="constant abs" tabindex="0">abs</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span>).
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>

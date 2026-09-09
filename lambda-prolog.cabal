@@ -19,6 +19,15 @@ build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
+    examples/hidden_reverse.mod
+    examples/hoas_lambda.mod
+    examples/hypothetical.mod
+    examples/lists.mod
+    examples/maps.mod
+    examples/prenex.mod
+    examples/tacticals.mod
+    examples/tutorial.mod
+    examples/typeinf.mod
 
 source-repository head
   type: git
@@ -28,6 +37,29 @@ library
   exposed-modules:
       LambdaProlog
       LambdaProlog.Cli
+      LambdaProlog.Driver
+      LambdaProlog.Error
+      LambdaProlog.Kernel.Builtin
+      LambdaProlog.Kernel.Goal
+      LambdaProlog.Kernel.Kind
+      LambdaProlog.Kernel.Pretty
+      LambdaProlog.Kernel.Search
+      LambdaProlog.Kernel.Subst
+      LambdaProlog.Kernel.Term
+      LambdaProlog.Kernel.Trail
+      LambdaProlog.Kernel.Type
+      LambdaProlog.Kernel.Unify
+      LambdaProlog.Name
+      LambdaProlog.Prelude
+      LambdaProlog.Pretty
+      LambdaProlog.Repl
+      LambdaProlog.Span
+      LambdaProlog.Surface.Annotate
+      LambdaProlog.Surface.Elab
+      LambdaProlog.Surface.Fixity
+      LambdaProlog.Surface.Module
+      LambdaProlog.Surface.Parser
+      LambdaProlog.Surface.Syntax
   other-modules:
       Paths_lambda_prolog
   autogen-modules:
@@ -79,6 +111,7 @@ executable build-website
   main-is: Main.hs
   other-modules:
       Assets
+      Highlight
       Html
       Paths_lambda_prolog
   autogen-modules:
@@ -181,6 +214,14 @@ test-suite lambda-prolog-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Examples.ExamplesSpec
+      Kernel.PrettySpec
+      Kernel.SearchSpec
+      Kernel.TermSpec
+      Kernel.TypeSpec
+      Kernel.UnifySpec
+      Surface.ElabSpec
+      Surface.ParseSpec
       Paths_lambda_prolog
   autogen-modules:
       Paths_lambda_prolog

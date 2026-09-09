@@ -1,19 +1,4 @@
-{-# LANGUAGE QuasiQuotes #-}
 
--- | Stylesheet, script, and favicon for the static site. Semantic colour is
--- defined once as custom properties and reused on every page.
-module Assets
-  ( css
-  , js
-  , faviconSvg
-  ) where
-
-import Data.Text (Text)
-import Data.Text qualified as T
-import Text.RawString.QQ (r)
-
-css :: Text
-css = [r|
 :root {
   --bg: #0f1419;
   --fg: #e7ecf3;
@@ -82,33 +67,3 @@ span[data-tip]:hover, span[data-tip]:focus {
 }
 .legend { display: flex; flex-wrap: wrap; gap: 0.6rem; font-size: 0.85rem; }
 .legend i { font-style: normal; padding: 0 0.2rem; }
-|]
-
-js :: Text
-js = [r|
-const tip = document.getElementById("tip");
-function show(e) {
-  const t = e.currentTarget.getAttribute("data-tip");
-  if (!t || !tip) return;
-  tip.textContent = t;
-  tip.hidden = false;
-  const r = e.currentTarget.getBoundingClientRect();
-  tip.style.left = Math.min(r.left, window.innerWidth - 280) + "px";
-  tip.style.top = (r.bottom + 8) + "px";
-}
-function hide() { if (tip) tip.hidden = true; }
-document.querySelectorAll("[data-tip]").forEach((el) => {
-  el.addEventListener("mouseenter", show);
-  el.addEventListener("focus", show);
-  el.addEventListener("mouseleave", hide);
-  el.addEventListener("blur", hide);
-});
-|]
-
-faviconSvg :: Text
-faviconSvg = [r|
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#1a2330"/>
-  <text x="5" y="23" font-size="18" fill="#7cb7ff" font-family="Georgia,serif">λΠ</text>
-</svg>
-|]

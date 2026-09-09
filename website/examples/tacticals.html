@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tactics and tacticals — λProlog</title>
+<meta name="description" content="Tactics as relations on object-goals; tacticals (then, orelse,">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>Tactics and tacticals</h1><p>Tactics as relations on object-goals; tacticals (then, orelse,</p><p class="muted">tacticals.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: Tactics and tacticals
+% tags: higher-order, search
+% summary: Tactics as relations on object-goals; tacticals (then, orelse,
+%   repeat) are higher-order predicates that combine them.
+
+module tacticals.
+
+kind <span class="lp-ty" data-tip="type constructor g" tabindex="0">g</span>  type.
+
+type <span class="lp-pred" data-tip="predicate truegoal" tabindex="0">truegoal</span>, <span class="lp-pred" data-tip="predicate p" tabindex="0">p</span>, <span class="lp-pred" data-tip="predicate q" tabindex="0">q</span>, <span class="lp-pred" data-tip="predicate r" tabindex="0">r</span>    g.
+type <span class="lp-pred" data-tip="predicate andgoal" tabindex="0">andgoal</span>              g -&gt; g -&gt; g.
+
+type <span class="lp-pred" data-tip="predicate idtac" tabindex="0">idtac</span>     g -&gt; g -&gt; o.
+type <span class="lp-pred" data-tip="predicate orelse" tabindex="0">orelse</span>    (g -&gt; g -&gt; o) -&gt; (g -&gt; g -&gt; o) -&gt; g -&gt; g -&gt; o.
+type <span class="lp-pred" data-tip="predicate then" tabindex="0">then</span>      (g -&gt; g -&gt; o) -&gt; (g -&gt; g -&gt; o) -&gt; g -&gt; g -&gt; o.
+type <span class="lp-pred" data-tip="predicate maptac" tabindex="0">maptac</span>    (g -&gt; g -&gt; o) -&gt; g -&gt; g -&gt; o.
+type <span class="lp-pred" data-tip="predicate ptac" tabindex="0">ptac</span>, <span class="lp-pred" data-tip="predicate qtac" tabindex="0">qtac</span>, <span class="lp-pred" data-tip="predicate rtac" tabindex="0">rtac</span>     g -&gt; g -&gt; o.
+
+<span class="lp-const" data-tip="constant idtac" tabindex="0">idtac</span> <span class="lp-var" data-tip="logic variable G" tabindex="0">G</span> <span class="lp-var" data-tip="logic variable G" tabindex="0">G</span>.
+
+<span class="lp-const" data-tip="constant orelse" tabindex="0">orelse</span> <span class="lp-var" data-tip="logic variable R1" tabindex="0">R1</span> <span class="lp-var" data-tip="logic variable R2" tabindex="0">R2</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-var" data-tip="logic variable R1" tabindex="0">R1</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span>.
+<span class="lp-const" data-tip="constant orelse" tabindex="0">orelse</span> <span class="lp-var" data-tip="logic variable R1" tabindex="0">R1</span> <span class="lp-var" data-tip="logic variable R2" tabindex="0">R2</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-var" data-tip="logic variable R2" tabindex="0">R2</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span>.
+
+<span class="lp-const" data-tip="constant maptac" tabindex="0">maptac</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-const" data-tip="constant truegoal" tabindex="0">truegoal</span> <span class="lp-const" data-tip="constant truegoal" tabindex="0">truegoal</span>.
+<span class="lp-const" data-tip="constant maptac" tabindex="0">maptac</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> (<span class="lp-const" data-tip="constant andgoal" tabindex="0">andgoal</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span>) (<span class="lp-const" data-tip="constant andgoal" tabindex="0">andgoal</span> <span class="lp-var" data-tip="logic variable G3" tabindex="0">G3</span> <span class="lp-var" data-tip="logic variable G4" tabindex="0">G4</span>) <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant maptac" tabindex="0">maptac</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G3" tabindex="0">G3</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant maptac" tabindex="0">maptac</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span> <span class="lp-var" data-tip="logic variable G4" tabindex="0">G4</span>.
+<span class="lp-const" data-tip="constant maptac" tabindex="0">maptac</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span>.
+
+<span class="lp-const" data-tip="constant then" tabindex="0">then</span> <span class="lp-var" data-tip="logic variable R1" tabindex="0">R1</span> <span class="lp-var" data-tip="logic variable R2" tabindex="0">R2</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-var" data-tip="logic variable R1" tabindex="0">R1</span> <span class="lp-var" data-tip="logic variable G1" tabindex="0">G1</span> <span class="lp-var" data-tip="logic variable G3" tabindex="0">G3</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span> <span class="lp-const" data-tip="constant maptac" tabindex="0">maptac</span> <span class="lp-var" data-tip="logic variable R2" tabindex="0">R2</span> <span class="lp-var" data-tip="logic variable G3" tabindex="0">G3</span> <span class="lp-var" data-tip="logic variable G2" tabindex="0">G2</span>.
+
+<span class="lp-const" data-tip="constant ptac" tabindex="0">ptac</span> <span class="lp-const" data-tip="constant p" tabindex="0">p</span> (<span class="lp-const" data-tip="constant andgoal" tabindex="0">andgoal</span> <span class="lp-const" data-tip="constant q" tabindex="0">q</span> <span class="lp-const" data-tip="constant r" tabindex="0">r</span>).
+<span class="lp-const" data-tip="constant qtac" tabindex="0">qtac</span> <span class="lp-const" data-tip="constant q" tabindex="0">q</span> <span class="lp-const" data-tip="constant truegoal" tabindex="0">truegoal</span>.
+<span class="lp-const" data-tip="constant rtac" tabindex="0">rtac</span> <span class="lp-const" data-tip="constant r" tabindex="0">r</span> <span class="lp-const" data-tip="constant truegoal" tabindex="0">truegoal</span>.
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>

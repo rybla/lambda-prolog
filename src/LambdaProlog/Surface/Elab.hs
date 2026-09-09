@@ -1,0 +1,428 @@
+-- | Elaboration: mixfix-resolved surface terms become kernel goals, clauses,
+-- and a signature of kinds and typed constants.
+module LambdaProlog.Surface.Elab
+  ( Sig (..)
+  , preludeSig
+  , elabModule
+  , elabQuery
+  ) where
+
+import Control.Monad (foldM)
+import Data.Char (isUpper)
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
+import Data.Text (Text, uncons)
+
+import LambdaProlog.Error (Error, mkError)
+import LambdaProlog.Kernel.Goal
+  ( Clause (..)
+  , Goal (..)
+  , Program
+  , consultClause
+  , emptyProgram
+  , mapGoal
+  )
+import LambdaProlog.Kernel.Kind (Kind (..))
+import LambdaProlog.Kernel.Term
+  ( Head (..)
+  , MetaId (..)
+  , Term (..)
+  , apps
+  , con
+  , intLit
+  , lam
+  , meta
+  , shift
+  , stringLit
+  , var
+  )
+import LambdaProlog.Kernel.Type (Scheme (..), Type (..), tyArrs)
+import LambdaProlog.Name (Interner, Name, intern, lookupName)
+import LambdaProlog.Prelude
+  ( Builtins (..)
+  , prelude
+  , tyInt
+  , tyList
+  , tyO
+  , tyString
+  )
+import LambdaProlog.Surface.Fixity (defaultOps, mixfixModule, mixfixTerm)
+import LambdaProlog.Surface.Syntax
+
+data Sig = Sig
+  { sigInterner :: Interner
+  , sigTyCons :: Map Name Kind
+  , sigConsts :: Map Name Scheme
+  }
+
+preludeSig :: Sig
+preludeSig =
+  let b = prelude
+      intern_ = bInterner b
+      tyCons =
+        Map.fromList
+          [ (bO b, KType)
+          , (bInt b, KType)
+          , (bString b, KType)
+          , (bList b, KArr KType KType)
+          ]
+      a = TyGen 0
+      consts =
+        Map.fromList
+          [ (bTrue b, Scheme 0 tyO)
+          , (bFail b, Scheme 0 tyO)
+          , (bCut b, Scheme 0 tyO)
+          , (bNil b, Scheme 1 (tyList a))
+          , (bCons b, Scheme 1 (tyArrs [a, tyList a] (tyList a)))
+          , (bEq b, Scheme 1 (tyArrs [a, a] tyO))
+          , (bPi b, Scheme 1 (tyArrs [TyArr a tyO] tyO))
+          , (bSigma b, Scheme 1 (tyArrs [TyArr a tyO] tyO))
+          , (bNot b, Scheme 0 (TyArr tyO tyO))
+          ]
+   in Sig intern_ tyCons consts
+
+data EEnv = EEnv
+  { eeBound :: Map Text Term
+  }
+
+emptyEEnv :: EEnv
+emptyEEnv = EEnv Map.empty
+
+elabModule :: Module -> Either Error (Sig, Program)
+elabModule m0 = do
+  m <- mixfixModule defaultOps m0
+  sg1 <- foldM elabDeclSig preludeSig (modDecls m)
+  prog <- foldM (elabDeclClause sg1) emptyProgram (modDecls m)
+  pure (sg1, prog)
+
+elabQuery :: Sig -> STerm -> Either Error ([MetaId], Goal)
+elabQuery sg t0 = do
+  t <- mixfixTerm defaultOps t0
+  let frees = freeVars t
+      mapping = zip frees (map MetaId [0 ..])
+      env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping])
+  g <- elabGoal sg env t
+  pure (map snd mapping, g)
+
+--------------------------------------------------------------------------------
+-- Signature declarations
+--------------------------------------------------------------------------------
+
+elabDeclSig :: Sig -> Decl -> Either Error Sig
+elabDeclSig sg d = case d of
+  DKind ids k -> do
+    kk <- elabKind k
+    foldM (\s i -> addTyCon s i kk) sg ids
+  DType ids ty -> do
+    sch <- elabScheme sg ty
+    foldM (\s i -> addConst s i sch) sg ids
+  DLocal ids (Just ty) -> do
+    sch <- elabScheme sg ty
+    foldM (\s i -> addConst s i sch) sg ids
+  DLocal ids Nothing ->
+    foldM (\s i -> addConst s i (Scheme 1 (TyGen 0))) sg ids
+  DExportDef ids (Just ty) -> elabDeclSig sg (DType ids ty)
+  DExportDef ids Nothing ->
+    foldM (\s i -> addConst s i (Scheme 0 tyO)) sg ids
+  DUseOnly ids mty -> elabDeclSig sg (DExportDef ids mty)
+  DClosed ids mty -> elabDeclSig sg (DLocal ids mty)
+  DTypeAbbrev {} -> Right sg
+  DFixity {} -> Right sg
+  DLocalKind ids _ ->
+    foldM (\s i -> addTyCon s i KType) sg ids
+  DClause {} -> Right sg
+
+addTyCon :: Sig -> Ident -> Kind -> Either Error Sig
+addTyCon sg i k =
+  let (n, intern') = intern (identName i) (sigInterner sg)
+   in Right sg {sigInterner = intern', sigTyCons = Map.insert n k (sigTyCons sg)}
+
+addConst :: Sig -> Ident -> Scheme -> Either Error Sig
+addConst sg i sch =
+  let (n, intern') = intern (identName i) (sigInterner sg)
+   in Right sg {sigInterner = intern', sigConsts = Map.insert n sch (sigConsts sg)}
+
+elabKind :: SKind -> Either Error Kind
+elabKind (SKType _) = Right KType
+elabKind (SKArr _ a b) = KArr <$> elabKind a <*> elabKind b
+
+elabScheme :: Sig -> SType -> Either Error Scheme
+elabScheme sg ty =
+  let vs = typeVars ty
+      ix = Map.fromList (zip vs [0 ..])
+   in Scheme (length vs) <$> elabType sg ix ty
+
+typeVars :: SType -> [Text]
+typeVars = go []
+  where
+    go acc t = case t of
+      STCon i
+        | isVarName (identName i) && identName i `notElem` acc -> acc ++ [identName i]
+        | otherwise -> acc
+      STArr _ a b -> go (go acc a) b
+      STApp _ a b -> go (go acc a) b
+      STParen _ a -> go acc a
+
+elabType :: Sig -> Map Text Int -> SType -> Either Error Type
+elabType sg ix t = case t of
+  STCon i
+    | isVarName (identName i) ->
+        case Map.lookup (identName i) ix of
+          Just n -> Right (TyGen n)
+          Nothing -> Left (mkError ("unbound type variable " <> identName i))
+    | otherwise -> do
+        n <- internTyCon sg i
+        Right (TyCon n [])
+  STArr _ a b -> TyArr <$> elabType sg ix a <*> elabType sg ix b
+  STApp _ a b -> do
+    ta <- elabType sg ix a
+    tb <- elabType sg ix b
+    case ta of
+      TyCon n args -> Right (TyCon n (args ++ [tb]))
+      _ -> Left (mkError "type constructor expected")
+  STParen _ a -> elabType sg ix a
+
+internTyCon :: Sig -> Ident -> Either Error Name
+internTyCon sg i =
+  let (n, _) = intern (identName i) (sigInterner sg)
+   in Right n
+
+--------------------------------------------------------------------------------
+-- Clauses
+--------------------------------------------------------------------------------
+
+elabDeclClause :: Sig -> Program -> Decl -> Either Error Program
+elabDeclClause sg prog d = case d of
+  DClause t -> do
+    c <- elabTopClause sg t
+    Right (consultClause c prog)
+  _ -> Right prog
+
+elabTopClause :: Sig -> STerm -> Either Error Clause
+elabTopClause sg t =
+  let (hd, body) = splitNeck t
+      frees = freeVars t
+      mapping = zip frees (map MetaId [0 ..])
+      env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping])
+   in do
+        (p, args) <- elabHead sg env hd
+        g <- elabGoal sg env body
+        pure (Clause p (length frees) args g)
+
+splitNeck :: STerm -> (STerm, STerm)
+splitNeck t =
+  case viewInfix ":-" t of
+    Just (h, b) -> (h, b)
+    Nothing -> (t, SId (Ident "true" (termSpan t)))
+
+elabHead :: Sig -> EEnv -> STerm -> Either Error (Name, [Term])
+elabHead sg env t = do
+  let (h, args) = viewApps t
+  case h of
+    SId i
+      | Just (TApp (HConst p) []) <- Map.lookup (identName i) (eeBound env) -> do
+          as <- mapM (elabTerm sg env) args
+          Right (p, as)
+      | otherwise -> do
+          p <- internConst sg i
+          as <- mapM (elabTerm sg env) args
+          Right (p, as)
+    _ -> Left (mkError "clause head must be an applied constant")
+
+--------------------------------------------------------------------------------
+-- Goals and terms
+--------------------------------------------------------------------------------
+
+elabGoal :: Sig -> EEnv -> STerm -> Either Error Goal
+elabGoal sg env t
+  | Just (a, b) <- viewInfix "," t =
+      GAnd <$> elabGoal sg env a <*> elabGoal sg env b
+  | Just (a, b) <- viewInfix ";" t =
+      GOr <$> elabGoal sg env a <*> elabGoal sg env b
+  | Just (d, g) <- viewInfix "=>" t = do
+      cs <- elabHyps sg env d
+      GImpl cs <$> elabGoal sg env g
+  | Just (a, b) <- viewInfix "=" t =
+      GEq <$> elabTerm sg env a <*> elabTerm sg env b
+  | Just (a, b) <- viewInfix "is" t =
+      GIs <$> elabTerm sg env a <*> elabTerm sg env b
+  | SCut _ <- t = Right GCut
+  | SId i <- t, identName i == "true" = Right GTrue
+  | SId i <- t, identName i == "fail" = Right GFail
+  | SId i <- t, identName i == "!" = Right GCut
+  | Just (x, mty, body) <- viewPi t = elabPi sg env x mty body
+  | Just (x, mty, body) <- viewSigma t = elabSigma sg env x mty body
+  | SApp _ (SId i) g <- t, identName i == "not" =
+      GNot <$> elabGoal sg env g
+  | otherwise = do
+      (h, args) <- pure (viewApps t)
+      case h of
+        SId i
+          | Just tm <- Map.lookup (identName i) (eeBound env) ->
+              case tm of
+                TApp (HMeta m) [] -> do
+                  as <- mapM (elabTerm sg env) args
+                  Right (GFlex m as)
+                TApp (HConst p) [] -> do
+                  as <- mapM (elabTerm sg env) args
+                  Right (GAtom p as)
+                _ -> Left (mkError "not a goal")
+          | otherwise -> do
+              p <- internConst sg i
+              as <- mapM (elabTerm sg env) args
+              Right (GAtom p as)
+        _ -> Left (mkError "not a goal")
+
+elabPi :: Sig -> EEnv -> Ident -> Maybe SType -> STerm -> Either Error Goal
+elabPi sg env x _mty body = do
+  let (ph, intern') = intern ("#pi-" <> identName x) (sigInterner sg)
+      sg' = sg {sigInterner = intern'}
+      env' = env {eeBound = Map.insert (identName x) (con ph) (eeBound env)}
+  g <- elabGoal sg' env' body
+  pure $
+    GForall tyO $ \e ->
+      mapGoal (substConst ph e) g
+
+elabSigma :: Sig -> EEnv -> Ident -> Maybe SType -> STerm -> Either Error Goal
+elabSigma sg env x _mty body = do
+  let (ph, intern') = intern ("#sig-" <> identName x) (sigInterner sg)
+      sg' = sg {sigInterner = intern'}
+      env' = env {eeBound = Map.insert (identName x) (con ph) (eeBound env)}
+  g <- elabGoal sg' env' body
+  pure $
+    GExists tyO $ \e ->
+      mapGoal (substConst ph e) g
+
+elabHyps :: Sig -> EEnv -> STerm -> Either Error [Clause]
+elabHyps sg env t
+  | Just (a, b) <- viewInfix "," t =
+      (++) <$> elabHyps sg env a <*> elabHyps sg env b
+  | otherwise = do
+      c <- elabHypClause sg env t
+      Right [c]
+
+elabHypClause :: Sig -> EEnv -> STerm -> Either Error Clause
+elabHypClause sg env t = do
+  let (hd, body) = splitNeck t
+      locals = freeVars t
+      mapping = zip locals (map MetaId [0 ..])
+      env' =
+        env
+          { eeBound =
+              Map.fromList [(v, meta mid) | (v, mid) <- mapping]
+                `Map.union` eeBound env
+          }
+  (p, args) <- elabHead sg env' hd
+  g <- elabGoal sg env' body
+  Right (Clause p (length locals) args g)
+
+elabTerm :: Sig -> EEnv -> STerm -> Either Error Term
+elabTerm sg env t = case t of
+  SId i
+    | Just tm <- Map.lookup (identName i) (eeBound env) -> Right tm
+    | isVarName (identName i) ->
+        Left (mkError ("unbound variable " <> identName i))
+    | otherwise -> con <$> internConst sg i
+  SInt _ n -> Right (intLit n)
+  SString _ s -> Right (stringLit s)
+  SCut _ -> con <$> internConst sg (Ident "!" (termSpan t))
+  SLam _ x _ body -> do
+    let env' =
+          env
+            { eeBound =
+                Map.insert (identName x) (var 0) $
+                  Map.map (shift 1 0) (eeBound env)
+            }
+    lam <$> elabTerm sg env' body
+  SList _ es tl -> do
+    es' <- mapM (elabTerm sg env) es
+    tl' <- case tl of
+      Nothing -> con <$> internConst sg (Ident "nil" (termSpan t))
+      Just u -> elabTerm sg env u
+    consN <- internConst sg (Ident "::" (termSpan t))
+    Right (foldr (\x xs -> apps (con consN) [x, xs]) tl' es')
+  SApp _ a b -> do
+    fa <- elabTerm sg env a
+    fb <- elabTerm sg env b
+    Right (apps fa [fb])
+  SSeq _ xs -> do
+    ys <- mapM (elabTerm sg env) xs
+    case ys of
+      [] -> Left (mkError "empty term")
+      z : zs -> Right (apps z zs)
+  SParen _ a -> elabTerm sg env a
+  SAnn _ a _ -> elabTerm sg env a
+
+--------------------------------------------------------------------------------
+-- Views and substitution
+--------------------------------------------------------------------------------
+
+viewInfix :: Text -> STerm -> Maybe (STerm, STerm)
+viewInfix op (SApp _ (SApp _ (SId i) l) r)
+  | identName i == op = Just (l, r)
+viewInfix _ _ = Nothing
+
+viewApps :: STerm -> (STerm, [STerm])
+viewApps = go []
+  where
+    go acc (SApp _ f a) = go (a : acc) f
+    go acc t = (t, acc)
+
+viewPi :: STerm -> Maybe (Ident, Maybe SType, STerm)
+viewPi t = case viewApps t of
+  (SId i, [SLam _ x ty b]) | identName i == "pi" -> Just (x, ty, b)
+  _ -> Nothing
+
+viewSigma :: STerm -> Maybe (Ident, Maybe SType, STerm)
+viewSigma t = case viewApps t of
+  (SId i, [SLam _ x ty b]) | identName i == "sigma" -> Just (x, ty, b)
+  _ -> Nothing
+
+substConst :: Name -> Term -> Term -> Term
+substConst n e (TLam t) = TLam (substConst n e t)
+substConst n e (TApp h ts) =
+  let ts' = map (substConst n e) ts
+   in case h of
+        HConst n' | n == n' -> apps e ts'
+        _ -> TApp h ts'
+
+substMeta :: MetaId -> Term -> Term -> Term
+substMeta m e (TLam t) = TLam (substMeta m e t)
+substMeta m e (TApp h ts) =
+  let ts' = map (substMeta m e) ts
+   in case h of
+        HMeta m' | m == m' -> apps e ts'
+        _ -> TApp h ts'
+
+internConst :: Sig -> Ident -> Either Error Name
+internConst sg i =
+  case lookupName (identName i) (sigInterner sg) of
+    Just n -> Right n
+    Nothing -> Left (mkError ("undeclared constant '" <> identName i <> "'"))
+
+isVarName :: Text -> Bool
+isVarName t = case uncons t of
+  Just (c, _) -> isUpper c || c == '_'
+  Nothing -> False
+
+freeVars :: STerm -> [Text]
+freeVars = go []
+  where
+    go bound t = case t of
+      SId i
+        | isVarName (identName i)
+            && identName i `notElem` bound
+            && identName i `notElem` ["_"] ->
+            [identName i]
+        | otherwise -> []
+      SLam _ x _ b -> go (identName x : bound) b
+      SApp _ a b -> nub (go bound a ++ go bound b)
+      SSeq _ xs -> nub (concatMap (go bound) xs)
+      SList _ es tl -> nub (concatMap (go bound) es ++ maybe [] (go bound) tl)
+      SAnn _ a _ -> go bound a
+      SParen _ a -> go bound a
+      _ -> []
+
+nub :: (Eq a) => [a] -> [a]
+nub [] = []
+nub (x : xs) = x : nub (filter (/= x) xs)

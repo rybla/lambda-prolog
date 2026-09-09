@@ -11,6 +11,7 @@ category: Logic Programming
 extra-source-files:
   - README.md
   - CHANGELOG.md
+  - examples/*.mod
 
 dependencies:
   - base >= 4.17 && < 5

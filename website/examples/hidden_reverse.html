@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hidden accumulator — λProlog</title>
+<meta name="description" content="reverse with an auxiliary rv that is existentially quantified and">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../css/site.css"></head>
+<body><header><nav><a href="../index.html">λProlog</a> · <a href="../examples/index.html">Examples</a></nav></header><main><h1>Hidden accumulator</h1><p>reverse with an auxiliary rv that is existentially quantified and</p><p class="muted">hidden_reverse.mod</p><p class="legend"><span><i class="lp-pred">predicate</i></span><span><i class="lp-var">logic variable</i></span><span><i class="lp-binder">binder</i></span><span><i class="lp-op">operator</i></span><span><i class="lp-pi">pi / sigma</i></span><span><i class="lp-impl">=&gt;</i></span></p><pre class="src">% title: Hidden accumulator
+% tags: sigma, implication, hierarchy
+% summary: reverse with an auxiliary rv that is existentially quantified and
+%   implied, so it never appears in the module signature.
+
+module hidden_reverse.
+
+type <span class="lp-pred" data-tip="predicate reverse" tabindex="0">reverse</span>  list A -&gt; list A -&gt; o.
+local <span class="lp-const" data-tip="constant rv" tabindex="0">rv</span>.
+type <span class="lp-pred" data-tip="predicate rv" tabindex="0">rv</span>       list A -&gt; list A -&gt; list A -&gt; o.
+
+% rv is local to the module. Its clauses are not in the program until
+% implication installs them for the duration of the call — a nested
+% program that does not pollute the caller.
+<span class="lp-const" data-tip="constant reverse" tabindex="0">reverse</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span>
+  (<span class="lp-const" data-tip="constant rv" tabindex="0">rv</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-var" data-tip="logic variable A" tabindex="0">A</span> <span class="lp-var" data-tip="logic variable A" tabindex="0">A</span><span class="lp-op" data-tip="operator , — mixfix connective" tabindex="0">,</span>
+   (<span class="lp-const" data-tip="constant rv" tabindex="0">rv</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable L1" tabindex="0">L1</span>) <span class="lp-var" data-tip="logic variable A" tabindex="0">A</span> <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span> <span class="lp-op" data-tip="operator :- — mixfix connective" tabindex="0">:-</span> <span class="lp-const" data-tip="constant rv" tabindex="0">rv</span> <span class="lp-var" data-tip="logic variable L1" tabindex="0">L1</span> (<span class="lp-var" data-tip="logic variable X" tabindex="0">X</span> <span class="lp-op" data-tip="operator :: — mixfix connective" tabindex="0">::</span> <span class="lp-var" data-tip="logic variable A" tabindex="0">A</span>) <span class="lp-var" data-tip="logic variable R" tabindex="0">R</span>))
+  <span class="lp-impl" data-tip="hypothetical implication (=&gt;): the left-hand clauses are added while proving the right-hand goal" tabindex="0">=&gt;</span> <span class="lp-const" data-tip="constant rv" tabindex="0">rv</span> <span class="lp-var" data-tip="logic variable L" tabindex="0">L</span> <span class="lp-const" data-tip="constant nil" tabindex="0">nil</span> <span class="lp-var" data-tip="logic variable K" tabindex="0">K</span>.
+</pre></main>
+<div id="tip" role="tooltip" hidden="hidden"></div>
+<script src="../js/site.js"></script></body></html>
