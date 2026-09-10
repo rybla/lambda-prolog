@@ -14,9 +14,22 @@ type path           node -> node -> o.
 type connected      node -> node -> o.
 type cycle3         o.
 type via_e          o.
+type blocked        node -> node -> o.
+type safe_edge      node -> node -> o.
+type safe_path      node -> node -> o.
+type with_bidirectional o -> o.
 
 path X Y :- edge X Y.
 path X Z :- edge X Y, path Y Z.
+
+% Safe path that obeys hypothetical blocked edge constraints
+safe_edge X Y :- edge X Y, not (blocked X Y).
+safe_path X Y :- safe_edge X Y.
+safe_path X Z :- safe_edge X Y, safe_path Y Z.
+
+% Run goal G treating all edges as bidirectional via a hypothetical Horn clause
+with_bidirectional G :-
+  (pi u\ pi v\ (edge u v => edge v u)) => G.
 
 % A base graph: a → b → d. Adding edge b c hypothetically unlocks a → c.
 edge a b.

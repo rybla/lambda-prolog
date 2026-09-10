@@ -206,6 +206,64 @@ tests =
     , succeeds "hypothetical.mod" "(edge d a) => (path b a, !)"
     , succeeds "tutorial.mod" "member 2 (1 :: 2 :: 3 :: nil)"
     , succeeds "tutorial.mod" "reverse (1 :: 2 :: 3 :: nil) K"
+    -- STLC showcase
+    , succeeds "stlc.mod" "typeof (abs_tm int_ty (x\\ x)) (arr_ty int_ty int_ty)"
+    , succeeds "stlc.mod" "eval (app_tm (abs_tm int_ty (x\\ x)) (int_tm 42)) (int_tm 42)"
+    , succeeds "stlc.mod" "preserves (app_tm (abs_tm int_ty (x\\ x)) (int_tm 42))"
+    , succeeds "stlc.mod" "eval (fst_tm (pair_tm (int_tm 10) true_tm)) (int_tm 10)"
+    , succeeds "stlc.mod" "eval (case_tm (inl_tm bool_ty (int_tm 7)) (x\\ x) (y\\ int_tm 0)) (int_tm 7)"
+    -- de Bruijn conversion
+    , succeeds "debruijn.mod" "hoas_to_debruijn (habs (x\\ x)) (dlam (dvar 0))"
+    , succeeds "debruijn.mod" "hoas_to_debruijn (habs (x\\ habs (y\\ x))) (dlam (dlam (dvar 1)))"
+    , succeeds "debruijn.mod" "debruijn_to_hoas (dlam (dvar 0)) H"
+    , succeeds "debruijn.mod" "d_eval (dapp (dlam (dvar 0)) (dlam (dlam (dvar 1)))) (dlam (dlam (dvar 1)))"
+    -- Interpreter with hypothetical scoping & shadowing
+    , succeeds "interp_scope.mod" "exec_res (slet \"x\" (elit 10) (slet \"y\" (elit 20) (sresult (eadd (evar \"x\") (evar \"y\"))))) 30"
+    , succeeds "interp_scope.mod" "exec_res (slet \"x\" (elit 10) (sseq (slet \"x\" (elit 5) (sresult (emul (evar \"x\") (elit 2)))) (sresult (evar \"x\")))) 10"
+    -- CPS & ANF transformations
+    , succeeds "cps_anf.mod" "to_anf (plus_e (cst 1) (cst 2)) A"
+    , succeeds "cps_anf.mod" "to_cps (plus_e (cst 10) (cst 20)) C"
+    -- Modal logic & Kripke semantics
+    , succeeds "modal_logic.mod" "(acc w0 w1, val w1 \"p\") => sat w0 (dia (atom \"p\"))"
+    , succeeds "modal_logic.mod" "test_axiom_k w0 (atom \"p\") (atom \"q\")"
+    , succeeds "modal_logic.mod" "test_axiom_t w0 (atom \"p\")"
+    -- Definite clause grammars
+    , succeeds "dcg.mod" "parse_sentence (\"the\" :: \"cat\" :: \"sleeps\" :: nil)"
+    , fails "dcg.mod" "parse_sentence (\"the\" :: \"cats\" :: \"sleeps\" :: nil)"
+    , succeeds "dcg.mod" "parse_and_eval (\"2\" :: \"+\" :: \"3\" :: \"*\" :: \"4\" :: nil) 14"
+    -- Coinduction & bisimulation
+    , succeeds "coinduction.mod" "bisimilar s_zeroes (s_cons 0 s_zeroes)"
+    , succeeds "coinduction.mod" "take_stream 4 s_alt01 (0 :: 1 :: 0 :: 1 :: nil)"
+    , succeeds "coinduction.mod" "state_bisim p0 q0"
+    -- HOPU & symbolic differentiation
+    , succeeds "hopu_meta.mod" "diff_and_simp (x\\ times_m (num 3) x) (x\\ num 3)"
+    , succeeds "hopu_meta.mod" "diff_and_simp (x\\ plus_m (times_m x x) (num 5)) DF"
+    -- Result & Either standard library
+    , succeeds "result.mod" "map_ok (x\\ y\\ y is x + 1) (ok 5) (ok 6)"
+    , succeeds "result.mod" "and_then (x\\ r\\ sigma y\\ y is x * 2, r = ok y) (ok 10) (ok 20)"
+    , succeeds "result.mod" "partition_results (ok 1 :: err \"fail\" :: ok 3 :: nil) (1 :: 3 :: nil) (\"fail\" :: nil)"
+    , succeeds "result.mod" "sequence_results (ok 1 :: ok 2 :: nil) (ok (1 :: 2 :: nil))"
+    -- Natural deduction & proof terms
+    , succeeds "natural_deduction.mod" "proves (p_imp (p_atom \"A\") (p_atom \"A\")) (lam_p (p_atom \"A\") (x\\ x))"
+    , succeeds "natural_deduction.mod" "has_proof (lam_p (p_and (p_atom \"a\") (p_atom \"b\")) (p\\ pair_p (snd_p p) (fst_p p))) (p_imp (p_and (p_atom \"a\") (p_atom \"b\")) (p_and (p_atom \"b\") (p_atom \"a\")))"
+    -- First-order logic prover
+    , succeeds "fol_prover.mod" "prove (f_imp (f_all (x\\ f_atom \"P\" (x :: nil))) (f_atom \"P\" (_ :: nil)))"
+    , succeeds "fol_prover.mod" "prove (f_imp (f_all (x\\ f_and (f_atom \"P\" (x :: nil)) (f_atom \"Q\" (x :: nil)))) (f_and (f_all (x\\ f_atom \"P\" (x :: nil))) (f_all (x\\ f_atom \"Q\" (x :: nil)))))"
+    -- Combinatory logic & bracket abstraction
+    , succeeds "combinators.mod" "bracket (x\\ x) c_i"
+    , succeeds "combinators.mod" "bracket (x\\ c_i) (c_app c_k c_i)"
+    , succeeds "combinators.mod" "reduce (c_app c_i (c_app (c_app c_k c_s) c_i)) c_s"
+    -- Enriched existing modules
+    , succeeds "typeinf.mod" "of unit_val unit_t"
+    , succeeds "typeinf.mod" "of (inl_tm bool c) (sum i bool)"
+    , succeeds "hoas_lambda.mod" "nf (app (abs (x\\ app (abs (y\\ y)) x)) (abs (z\\ z))) (abs (z\\ z))"
+    , succeeds "hoas_lambda.mod" "alpha_equiv (abs (x\\ x)) (abs (y\\ y))"
+    , succeeds "lists.mod" "intercalate (0 :: nil) ((1 :: nil) :: (2 :: nil) :: (3 :: nil) :: nil) (1 :: 0 :: 2 :: 0 :: 3 :: nil)"
+    , succeeds "lists.mod" "chunks_of 2 (1 :: 2 :: 3 :: 4 :: nil) ((1 :: 2 :: nil) :: (3 :: 4 :: nil) :: nil)"
+    , succeeds "option.mod" "flatten_option (some (some 42)) (some 42)"
+    , succeeds "option.mod" "cat_options (some 1 :: none :: some 3 :: nil) (1 :: 3 :: nil)"
+    , succeeds "hypothetical.mod" "safe_path a d"
+    , fails "hypothetical.mod" "(blocked a b) => safe_path a d"
     ]
   where
     succeeds file q = testCase (file ++ " ⊢ " ++ q) $ do

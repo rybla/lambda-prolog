@@ -11,19 +11,26 @@ kind ty  type.
 type app      tm -> tm -> tm.
 type abs      (tm -> tm) -> tm.
 type c        tm.
+type unit_val tm.
 type true, false  tm.
 type if       tm -> tm -> tm -> tm.
 type mkpair   tm -> tm -> tm.
 type fst, snd tm -> tm.
+type inl_tm   ty -> tm -> tm.
+type inr_tm   ty -> tm -> tm.
+type case_tm  tm -> (tm -> tm) -> (tm -> tm) -> tm.
+type fix      ty -> (tm -> tm) -> tm.
 type arrow    ty -> ty -> ty.
 type prod     ty -> ty -> ty.
-type i, bool  ty.
+type sum      ty -> ty -> ty.
+type i, bool, unit_t ty.
 type of       tm -> ty -> o.
 type hastype  tm -> o.
 type ident_ty ty -> o.
 type const_ty ty -> ty -> o.
 
 of c i.
+of unit_val unit_t.
 of true bool.
 of false bool.
 
@@ -37,6 +44,14 @@ of (mkpair M N) (prod A B) :-
   of M A, of N B.
 of (fst M) A :- of M (prod A _).
 of (snd M) B :- of M (prod _ B).
+of (inl_tm B M) (sum A B) :- of M A.
+of (inr_tm A N) (sum A B) :- of N B.
+of (case_tm M L R) C :-
+  of M (sum A B),
+  (pi x\ of x A => of (L x) C),
+  (pi y\ of y B => of (R y) C).
+of (fix A Body) A :-
+  pi x\ of x A => of (Body x) A.
 
 hastype M :- of M _.
 

@@ -87,6 +87,8 @@ tests =
             outerTerm = lam (app fMeta (var 0))
             rigidTerm = lam (lam (apps rMeta [var 0, var 1]))
         assertSucceeds outerTerm rigidTerm
+    , testCase "prune lowers foreign meta level, preventing subsequent eigen capture" $
+        assertBool "pruned meta cannot unify with eigen" assertPruneLowersLevel
     ]
   where
     (ns, _intern) = internMany ["f", "a", "b", "c", "g", "nil", "::", "e"] emptyInterner
@@ -154,6 +156,21 @@ tests =
         case u of
           Left (Scope _) -> pure True
           _ -> pure False
+
+    assertPruneLowersLevel =
+      runTrail $ \tr -> do
+        allocMeta tr (MetaId 0) (Level 0) Nothing
+        _ <- pushLevel tr
+        registerEigen tr eN
+        allocMeta tr (MetaId 1) (Level 1) Nothing
+        u1 <- unify tr (meta (MetaId 0)) (lam (meta (MetaId 1)))
+        case u1 of
+          Left _ -> pure False
+          Right () -> do
+            u2 <- unify tr (meta (MetaId 1)) (con eN)
+            case u2 of
+              Left (Scope _) -> pure True
+              _ -> pure False
 
     assertUnwind =
       runTrail $ \tr -> do

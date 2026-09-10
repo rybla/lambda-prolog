@@ -6,7 +6,7 @@ import Data.Text (Text)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, assertEqual, testCase)
 
-import LambdaProlog.Driver (loadSource, runQueryText)
+import LambdaProlog.Driver (loadFile, loadSource, runQueryText)
 import LambdaProlog.Kernel.Search (Solution (..))
 import LambdaProlog.Kernel.Term (intLit, stringLit)
 
@@ -127,6 +127,49 @@ tests =
             case runQueryText ld "once (pi x\\ ident x x)" of
               Left e -> fail (show e)
               Right sols -> assertBool "once pi" (not (null sols))
+    , testCase "HOAS scope escape via foreign meta fails" $
+        case loadSource "abs.mod" absSrc of
+          Left e -> fail (show e)
+          Right ld ->
+            case runQueryText ld "sigma M\\ pi x\\ sigma Z\\ M = abs (w\\ Z), Z = x" of
+              Left e -> fail (show e)
+              Right sols -> assertBool "no escape" (null sols)
+    , testCase "eigenvariable cannot unify with program constant" $
+        case loadSource "lists.mod" listsSrc of
+          Left e -> fail (show e)
+          Right ld ->
+            case runQueryText ld "pi x\\ x = append" of
+              Left e -> fail (show e)
+              Right sols -> assertBool "no collision" (null sols)
+    , testCase "level pops after universal goal" $
+        case loadSource "nary.mod" narySrc of
+          Left e -> fail (show e)
+          Right ld ->
+            case runQueryText ld "(pi x\\ ident x x), (pi y\\ Y = y)" of
+              Left e -> fail (show e)
+              Right sols -> assertBool "cannot escape" (null sols)
+    , testCase "hypothetical clause preserves query variable binding" $
+        case loadSource "hyp.mod" hypSrc of
+          Left e -> fail (show e)
+          Right ld -> do
+            case runQueryText ld "Key = 1, (edge Key 999 => edge 1 Y)" of
+              Left e -> fail (show e)
+              Right sols -> do
+                assertEqual "one sol" 1 (length sols)
+                assertEqual "Y = 999" (Just (intLit 999)) (IntMap.lookup 1 (solBinds (head sols)))
+            case runQueryText ld "Key = 1, (edge Key 999 => edge 2 Y)" of
+              Left e -> fail (show e)
+              Right sols -> assertBool "fails" (null sols)
+    , testCase "sibling hypothetical clauses isolate local meta variables" $
+        case loadSource "hyp.mod" hypSrc of
+          Left e -> fail (show e)
+          Right ld ->
+            case runQueryText ld "(edge 1 2, edge 2 3) => (edge 1 A, edge 2 B)" of
+              Left e -> fail (show e)
+              Right sols -> do
+                assertEqual "one sol" 1 (length sols)
+                assertEqual "A = 2" (Just (intLit 2)) (IntMap.lookup 0 (solBinds (head sols)))
+                assertEqual "B = 3" (Just (intLit 3)) (IntMap.lookup 1 (solBinds (head sols)))
     ]
   where
     wildSrc :: Text
@@ -165,3 +208,9 @@ tests =
       \ident X X.\n\
       \type once o -> o.\n\
       \once G :- G, !.\n"
+    hypSrc :: Text
+    hypSrc =
+      "module hyp.\n\
+      \type edge int -> int -> o.\n\
+      \type ident A -> A -> o.\n\
+      \ident X X.\n"

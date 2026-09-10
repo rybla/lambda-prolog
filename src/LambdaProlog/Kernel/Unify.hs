@@ -28,7 +28,6 @@ import LambdaProlog.Kernel.Trail
   ( Trail
   , bindMeta
   , eigenLevel
-  , freshMeta
   , freshMetaAt
   , mark
   , mcBind
@@ -265,14 +264,14 @@ prune tr extra m mLev pats z args = do
         Left e -> pure (Left e)
         Right zpats -> do
           kept <- filterM (isAllowedPat tr extra mLev pats) zpats
-          if length kept == length zpats
+          if length kept == length zpats && mcLevel zCell <= mLev
             then do
               as' <- mapM (invert tr extra mLev m pats) args
               case sequence as' of
                 Left e -> pure (Left e)
                 Right as'' -> pure (Right (TApp (HMeta z) as''))
             else do
-              z' <- freshMetaAt tr (mcLevel zCell) Nothing
+              z' <- freshMetaAt tr (min (mcLevel zCell) mLev) Nothing
               let kZ = length zpats
                   keptIdxs = [i | (i, p) <- zip [0 ..] zpats, p `elem` kept]
                   body =
@@ -332,7 +331,8 @@ sameMeta tr m a1 a2 = do
           if length kept == k
             then pure (Right ())
             else do
-              z <- freshMeta tr Nothing
+              cell <- readMeta tr m
+              z <- freshMetaAt tr (mcLevel cell) Nothing
               let body =
                     TApp
                       (HMeta z)

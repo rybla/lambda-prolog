@@ -20,16 +20,28 @@ extra-source-files:
     README.md
     CHANGELOG.md
     examples/assoc.mod
+    examples/coinduction.mod
+    examples/combinators.mod
     examples/control.mod
+    examples/cps_anf.mod
+    examples/dcg.mod
+    examples/debruijn.mod
+    examples/fol_prover.mod
     examples/hidden_reverse.mod
     examples/hoas_lambda.mod
+    examples/hopu_meta.mod
     examples/hypothetical.mod
+    examples/interp_scope.mod
     examples/lists.mod
     examples/maps.mod
+    examples/modal_logic.mod
     examples/nat.mod
+    examples/natural_deduction.mod
     examples/option.mod
     examples/prenex.mod
+    examples/result.mod
     examples/sets.mod
+    examples/stlc.mod
     examples/strings.mod
     examples/tacticals.mod
     examples/trees.mod

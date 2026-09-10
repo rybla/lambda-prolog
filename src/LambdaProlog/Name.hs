@@ -74,7 +74,10 @@ nameText env (Name i) =
     Nothing -> nameTextUnchecked (Name i)
 
 nameTextUnchecked :: Name -> Text
-nameTextUnchecked (Name i) = "#" <> pack (show i)
+nameTextUnchecked (Name i)
+  | i >= 1000000 = "#e" <> pack (show (i - 1000000))
+  | i < 0 = "#bnd" <> pack (show (negate i))
+  | otherwise = "#" <> pack (show i)
 
 internerSize :: Interner -> Int
 internerSize = internNext

@@ -7,13 +7,14 @@ module LambdaProlog.Kernel.Search
   ( Solution (..)
   , query
   , queryN
+  , queryWithInterner
+  , queryNWithInterner
   ) where
 
 import Control.Monad.ST (ST)
 import Data.IntMap.Strict (IntMap)
 import Data.IntMap.Strict qualified as IntMap
 import Data.STRef (STRef, newSTRef, readSTRef, writeSTRef)
-import Data.Text qualified as T
 
 import LambdaProlog.Kernel.Builtin (Ground (..), evalCmp, evalGround)
 import LambdaProlog.Kernel.Goal
@@ -30,6 +31,7 @@ import LambdaProlog.Kernel.Trail
   , allocMeta
   , freshMeta
   , mark
+  , popLevel
   , pushLevel
   , registerEigen
   , runTrail
@@ -46,7 +48,7 @@ import LambdaProlog.Kernel.Term
   , stringLit
   )
 import LambdaProlog.Kernel.Unify (derefNf, unify, whnf)
-import LambdaProlog.Name (Interner, Name, intern)
+import LambdaProlog.Name (Interner, Name (..))
 import LambdaProlog.Prelude (Builtins (..), prelude, tyO)
 
 data Solution = Solution
@@ -57,7 +59,6 @@ data Solution = Solution
 data Env s = Env
   { envTrail :: Trail s
   , envProg :: STRef s Program
-  , envIntern :: STRef s Interner
   , envFail :: STRef s (ST s ())
   , envCut :: STRef s (ST s ())
   , envEigenN :: STRef s Int
@@ -66,19 +67,24 @@ data Env s = Env
 query :: Program -> [MetaId] -> Goal -> [Solution]
 query = queryN maxBound
 
+queryWithInterner :: Interner -> Program -> [MetaId] -> Goal -> [Solution]
+queryWithInterner intern0 = queryNWithInterner maxBound intern0
+
 queryN :: Int -> Program -> [MetaId] -> Goal -> [Solution]
-queryN maxN prog qvars g =
+queryN maxN = queryNWithInterner maxN (bInterner prelude)
+
+queryNWithInterner :: Int -> Interner -> Program -> [MetaId] -> Goal -> [Solution]
+queryNWithInterner maxN _intern0 prog qvars g =
   runTrail $ \tr -> do
     mapM_ (\m -> allocMeta tr m (Level 0) Nothing) qvars
     acc <- newSTRef ([] :: [Solution])
     nref <- newSTRef (0 :: Int)
     progR <- newSTRef prog
-    internR <- newSTRef (bInterner prelude)
     done <- pure (pure () :: ST s ())
     failR <- newSTRef done
     cutR <- newSTRef done
     eigenN <- newSTRef (0 :: Int)
-    let env = Env tr progR internR failR cutR eigenN
+    let env = Env tr progR failR cutR eigenN
         sc = do
           n <- readSTRef nref
           if n >= maxN
@@ -232,8 +238,8 @@ clausesOfTerm t = case t of
   _ -> [clauseHead t GTrue]
 
 clauseHead :: Term -> Goal -> Clause
-clauseHead (TApp (HConst p) args) body = Clause p 0 args body
-clauseHead _ _ = Clause (bFail prelude) 0 [] GFail
+clauseHead (TApp (HConst p) args) body = Clause p [] args body
+clauseHead _ _ = Clause (bFail prelude) [] [] GFail
 
 -- | @Just True@/@Just False@ means the atom is a builtin that succeeded or
 -- failed. @Nothing@ means it is an ordinary predicate.
@@ -297,16 +303,15 @@ solveForall env k sc = do
   _ <- pushLevel tr
   e <- internEigen env
   registerEigen tr e
-  solve env (k (TApp (HConst e) [])) sc
+  solve env (k (TApp (HConst e) [])) $ do
+    popLevel tr
+    sc
 
 internEigen :: Env s -> ST s Name
 internEigen env = do
   n <- readSTRef (envEigenN env)
   writeSTRef (envEigenN env) (n + 1)
-  internR <- readSTRef (envIntern env)
-  let (nm, intern') = intern ("#e" <> T.pack (show n)) internR
-  writeSTRef (envIntern env) intern'
-  pure nm
+  pure (Name (1000000 + n))
 
 solveImpl :: Env s -> [Clause] -> Goal -> ST s () -> ST s ()
 solveImpl env cs g sc = do

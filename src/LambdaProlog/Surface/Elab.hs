@@ -39,7 +39,7 @@ import LambdaProlog.Kernel.Term
   , var
   )
 import LambdaProlog.Kernel.Type (Scheme (..), Type (..), tyArrs)
-import LambdaProlog.Name (Interner, Name, intern, lookupName)
+import LambdaProlog.Name (Interner, Name (..), intern, lookupName)
 import LambdaProlog.Prelude
   ( Builtins (..)
   , prelude
@@ -83,6 +83,7 @@ preludeSig =
 
 data EEnv = EEnv
   { eeBound :: Map Text Term
+  , eeNextId :: Int
   }
 
 elabModule :: Module -> Either Error (Sig, Program)
@@ -95,9 +96,9 @@ elabModule m0 = do
 elabQuery :: Sig -> STerm -> Either Error ([MetaId], Goal)
 elabQuery sg t0 = do
   t <- mixfixTerm defaultOps (renameWildcards t0)
-  let frees = freeVars t
+  let frees = freeVarsClause t
       mapping = zip frees (map MetaId [0 ..])
-      env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping])
+      env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping]) (length frees)
   g <- elabGoal sg env t
   pure (map snd mapping, g)
 
@@ -199,13 +200,13 @@ elabTopClause :: Sig -> STerm -> Either Error Clause
 elabTopClause sg t0 =
   let t = renameWildcards t0
       (hd, body) = splitNeck t
-      frees = freeVars t
+      frees = freeVarsClause t
       mapping = zip frees (map MetaId [0 ..])
-      env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping])
+      env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping]) (length frees)
    in do
         (p, args) <- elabHead sg env hd
         g <- elabGoal sg env body
-        pure (Clause p (length frees) args g)
+        pure (Clause p (map snd mapping) args g)
 
 splitNeck :: STerm -> (STerm, STerm)
 splitNeck t =
@@ -238,7 +239,7 @@ elabGoal sg env t
   | Just (a, b) <- viewInfix ";" t =
       GOr <$> elabGoal sg env a <*> elabGoal sg env b
   | Just (d, g) <- viewInfix "=>" t = do
-      cs <- elabHyps sg env d
+      (cs, _) <- elabHyps sg env d
       GImpl cs <$> elabGoal sg env g
   | Just (a, b) <- viewInfix "=" t =
       GEq <$> elabTerm sg env a <*> elabTerm sg env b
@@ -286,39 +287,48 @@ elabBinders ::
   Either Error Goal
 elabBinders _ _ _ [] _ = Left (mkError "empty binder list")
 elabBinders wrap sg env ((x, _) : xs) body = do
-  let (ph, intern') = intern ("#bnd-" <> identName x) (sigInterner sg)
-      sg' = sg {sigInterner = intern'}
-      env' = env {eeBound = Map.insert (identName x) (con ph) (eeBound env)}
+  let ph = Name (negate (eeNextId env + 1))
+      env' =
+        env
+          { eeNextId = eeNextId env + 1
+          , eeBound = Map.insert (identName x) (con ph) (eeBound env)
+          }
   inner <- case xs of
-    [] -> elabGoal sg' env' body
-    _ -> elabBinders wrap sg' env' xs body
+    [] -> elabGoal sg env' body
+    _ -> elabBinders wrap sg env' xs body
   pure $
     wrap tyO $ \e ->
       mapGoal (substConst ph e) inner
 
-elabHyps :: Sig -> EEnv -> STerm -> Either Error [Clause]
+elabHyps :: Sig -> EEnv -> STerm -> Either Error ([Clause], Int)
 elabHyps sg env t
-  | Just (a, b) <- viewInfix "," t =
-      (++) <$> elabHyps sg env a <*> elabHyps sg env b
+  | Just (a, b) <- viewInfix "," t = do
+      (cs1, next1) <- elabHyps sg env a
+      (cs2, next2) <- elabHyps sg env {eeNextId = next1} b
+      pure (cs1 ++ cs2, next2)
   | otherwise = do
-      c <- elabHypClause sg env t
-      Right [c]
+      (c, next') <- elabHypClause sg env t
+      pure ([c], next')
 
-elabHypClause :: Sig -> EEnv -> STerm -> Either Error Clause
+elabHypClause :: Sig -> EEnv -> STerm -> Either Error (Clause, Int)
 elabHypClause sg env t0 = do
   let t = renameWildcards t0
       (hd, body) = splitNeck t
-      locals = freeVars t
-      mapping = zip locals (map MetaId [0 ..])
+      allVars = freeVars t
+      locals = [v | v <- allVars, Map.notMember v (eeBound env)]
+      startId = eeNextId env
+      clmids = map MetaId [startId .. startId + length locals - 1]
+      mapping = zip locals clmids
       env' =
         env
           { eeBound =
               Map.fromList [(v, meta mid) | (v, mid) <- mapping]
                 `Map.union` eeBound env
+          , eeNextId = startId + length locals
           }
   (p, args) <- elabHead sg env' hd
   g <- elabGoal sg env' body
-  Right (Clause p (length locals) args g)
+  pure (Clause p clmids args g, eeNextId env')
 
 elabTerm :: Sig -> EEnv -> STerm -> Either Error Term
 elabTerm sg env t = case t of
@@ -422,6 +432,38 @@ freeVars :: STerm -> [Text]
 freeVars = go []
   where
     go bound t = case t of
+      SId i
+        | isVarName (identName i)
+            && identName i `notElem` bound
+            && identName i `notElem` ["_"] ->
+            [identName i]
+        | otherwise -> []
+      SLam _ x _ b -> go (identName x : bound) b
+      SApp _ a b -> nub (go bound a ++ go bound b)
+      SSeq _ xs -> nub (concatMap (go bound) xs)
+      SList _ es tl -> nub (concatMap (go bound) es ++ maybe [] (go bound) tl)
+      SAnn _ a _ -> go bound a
+      SParen _ a -> go bound a
+      _ -> []
+
+-- | Free variables of a top-level clause or query term.
+-- Variables inside the assumption D of (D => G) are only considered free
+-- in the outer clause if they also appear in G or in the enclosing context.
+freeVarsClause :: STerm -> [Text]
+freeVarsClause t =
+  let (hd, body) = splitNeck t
+      hVars = freeVars hd
+   in nub (hVars ++ freeVarsGoal hVars body)
+
+freeVarsGoal :: [Text] -> STerm -> [Text]
+freeVarsGoal inScope = go []
+  where
+    go bound tm = case tm of
+      _ | Just (d, g) <- viewInfix "=>" tm ->
+          let gVars = go bound g
+              dVars = go bound d
+              shared = filter (\v -> v `elem` inScope || v `elem` gVars) dVars
+           in nub (gVars ++ shared)
       SId i
         | isVarName (identName i)
             && identName i `notElem` bound

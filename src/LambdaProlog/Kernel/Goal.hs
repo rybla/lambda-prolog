@@ -11,8 +11,10 @@ module LambdaProlog.Kernel.Goal
   , addHyps
   , lookupClauses
   , copyClause
+  , clNVars
+  , mkClause
   , mapGoal
-  , mapClause
+  , mapClauseMetas
   ) where
 
 import Control.Monad.ST (ST)
@@ -50,14 +52,20 @@ data Goal
   | GNot Goal
 
 -- | A definite clause. Template variables are 'HMeta' with ids
--- @0 .. clNVars-1@. 'copyClause' replaces those with fresh trail metas;
--- ids @>= clNVars@ are left alone (live query variables in hypotheticals).
+-- listed in 'clVars'. 'copyClause' replaces those with fresh trail metas;
+-- other metas are left alone (live variables from enclosing scopes).
 data Clause = Clause
   { clPred :: Name
-  , clNVars :: Int
+  , clVars :: [MetaId]
   , clArgs :: [Term]
   , clBody :: Goal
   }
+
+clNVars :: Clause -> Int
+clNVars = length . clVars
+
+mkClause :: Name -> Int -> [Term] -> Goal -> Clause
+mkClause p n args body = Clause p (map MetaId [0 .. n - 1]) args body
 
 newtype Program = Program
   { progMap :: Map Name [Clause]
@@ -85,60 +93,61 @@ addHyps cs p = foldl (flip addHyp) p (reverse cs)
 lookupClauses :: Name -> Program -> [Clause]
 lookupClauses p (Program m) = Map.findWithDefault [] p m
 
--- | Freshen template metas @0..clNVars-1@.
+-- | Freshen template metas in 'clVars'.
 copyClause :: Trail s -> Clause -> ST s Clause
 copyClause tr c
-  | clNVars c <= 0 = pure c
+  | null (clVars c) = pure c
   | otherwise = do
-      ms <- mapM (\_ -> freshMeta tr Nothing) [0 .. clNVars c - 1]
-      let subst t = substTmps (clNVars c) ms t
+      ms <- mapM (\_ -> freshMeta tr Nothing) (clVars c)
+      let m = Map.fromList (zip (clVars c) ms)
       pure
         c
-          { clNVars = 0
-          , clArgs = map subst (clArgs c)
-          , clBody = substGoalTmps (clNVars c) ms (clBody c)
+          { clVars = []
+          , clArgs = map (substMetas m) (clArgs c)
+          , clBody = substGoalMetas m (clBody c)
           }
 
-substTmps :: Int -> [MetaId] -> Term -> Term
-substTmps n ms = go
+substMetas :: Map MetaId MetaId -> Term -> Term
+substMetas m = go
   where
     go (TLam t) = TLam (go t)
     go (TApp h ts) =
       let ts' = map go ts
        in case h of
-            HMeta (MetaId i)
-              | i >= 0 && i < n -> TApp (HMeta (ms !! i)) ts'
+            HMeta mid ->
+              case Map.lookup mid m of
+                Just mid' -> TApp (HMeta mid') ts'
+                Nothing -> TApp h ts'
             _ -> TApp h ts'
 
-substGoalTmps :: Int -> [MetaId] -> Goal -> Goal
-substGoalTmps n ms = go
+substGoalMetas :: Map MetaId MetaId -> Goal -> Goal
+substGoalMetas m = go
   where
-    s = substTmps n ms
+    s = substMetas m
     go g = case g of
       GTrue -> GTrue
       GFail -> GFail
       GCut -> GCut
       GAtom p ts -> GAtom p (map s ts)
-      GFlex (MetaId i) ts
-        | i >= 0 && i < n -> GFlex (ms !! i) (map s ts)
-        | otherwise -> GFlex (MetaId i) (map s ts)
+      GFlex mid ts ->
+        case Map.lookup mid m of
+          Just mid' -> GFlex mid' (map s ts)
+          Nothing -> GFlex mid (map s ts)
       GAnd a b -> GAnd (go a) (go b)
       GOr a b -> GOr (go a) (go b)
       GExists ty k -> GExists ty (go . k)
       GForall ty k -> GForall ty (go . k)
-      GImpl cs b -> GImpl (map (mapClause n ms) cs) (go b)
+      GImpl cs b -> GImpl (map (mapClauseMetas m) cs) (go b)
       GEq a b -> GEq (s a) (s b)
       GIs a b -> GIs (s a) (s b)
       GNot b -> GNot (go b)
 
-mapClause :: Int -> [MetaId] -> Clause -> Clause
-mapClause n ms c
-  | clNVars c > 0 = c -- nested templates keep their own numbering
-  | otherwise =
-      c
-        { clArgs = map (substTmps n ms) (clArgs c)
-        , clBody = substGoalTmps n ms (clBody c)
-        }
+mapClauseMetas :: Map MetaId MetaId -> Clause -> Clause
+mapClauseMetas m c =
+  c
+    { clArgs = map (substMetas m) (clArgs c)
+    , clBody = substGoalMetas m (clBody c)
+    }
 
 mapGoal :: (Term -> Term) -> Goal -> Goal
 mapGoal f = go

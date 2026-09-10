@@ -20,6 +20,9 @@ type or_else_option  option A -> option A -> option A -> o.
 type to_list         option A -> list A -> o.
 type from_list_first list A -> option A -> o.
 type option_of   (A -> o) -> A -> option A -> o.
+type flatten_option option (option A) -> option A -> o.
+type cat_options    list (option A) -> list A -> o.
+type option_all     (A -> o) -> option A -> o.
 
 is_none none.
 
@@ -53,6 +56,16 @@ from_list_first (X :: _) (some X).
 % If G X succeeds, wrap the first binding; otherwise none.
 option_of G X (some X) :- G X, !.
 option_of _ _ none.
+
+flatten_option none none.
+flatten_option (some Opt) Opt.
+
+cat_options nil nil.
+cat_options (none :: Rest) Out :- cat_options Rest Out.
+cat_options (some X :: Rest) (X :: Out) :- cat_options Rest Out.
+
+option_all _ none.
+option_all P (some X) :- P X.
 
 % ---------------------------------------------------------------------------
 % Examples

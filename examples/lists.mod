@@ -69,6 +69,9 @@ type isort       list int -> list int -> o.
 type merge_sorted list int -> list int -> list int -> o.
 type msort       list int -> list int -> o.
 type dappend     pair (list A) (list A) -> pair (list A) (list A) -> pair (list A) (list A) -> o.
+type intercalate list A -> list (list A) -> list A -> o.
+type chunks_of   int -> list A -> list (list A) -> o.
+type zip_with    (A -> B -> C -> o) -> list A -> list B -> list C -> o.
 
 % Structural identity of lists.
 id nil nil.
@@ -246,6 +249,26 @@ msort L K :-
 % Difference lists: dappend (pr A B) (pr B C) (pr A C) concatenates in
 % constant time by unifying the hole of the first with the start of the second.
 dappend (pr A B) (pr B C) (pr A C).
+
+intercalate _ nil nil.
+intercalate _ (X :: nil) X.
+intercalate Sep (X :: Y :: Rest) Res :-
+  intercalate Sep (Y :: Rest) Tail,
+  append X Sep XSep,
+  append XSep Tail Res.
+
+chunks_of _ nil nil.
+chunks_of N (X :: Xs) (Chunk :: Rest) :-
+  N > 0,
+  take N (X :: Xs) Chunk,
+  drop N (X :: Xs) Rem,
+  chunks_of N Rem Rest.
+
+zip_with _ nil _ nil.
+zip_with _ _ nil nil.
+zip_with P (X :: Xs) (Y :: Ys) (Z :: Zs) :-
+  P X Y Z,
+  zip_with P Xs Ys Zs.
 
 % ---------------------------------------------------------------------------
 % Examples (try at the REPL)

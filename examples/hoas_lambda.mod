@@ -13,6 +13,10 @@ type eval    tm -> tm -> o.
 type copy    tm -> tm -> o.
 type subst   (tm -> tm) -> tm -> tm -> o.
 type beta    tm -> tm -> o.
+type step_beta tm -> tm -> o.
+type nf       tm -> tm -> o.
+type alpha_equiv tm -> tm -> o.
+type eq_hyp   tm -> tm -> o.
 type size    tm -> int -> o.
 type is_abs  tm -> o.
 type is_app  tm -> o.
@@ -33,6 +37,31 @@ copy (abs R) (abs S) :- pi x\ copy x x => copy (R x) (S x).
 subst R N M :- copy (R N) M.
 
 beta (app (abs R) N) M :- subst R N M.
+
+step_beta (app (abs R) N) M :- subst R N M.
+step_beta (app M N) (app M1 N) :- step_beta M M1.
+step_beta (app M N) (app M N1) :- step_beta N N1.
+
+% Full normal form reduction (evaluates under lambda abstractions)
+nf (abs R) (abs S) :-
+  pi x\ nf (R x) (S x).
+nf (app M N) Res :-
+  nf M (abs R), !,
+  nf N VN,
+  subst R VN Body,
+  nf Body Res.
+nf (app M N) (app M1 N1) :-
+  nf M M1,
+  nf N N1.
+nf X X.
+
+% Alpha-equivalence check via hypothetical reasoning
+alpha_equiv X Y :- eq_hyp X Y, !.
+alpha_equiv (app M1 N1) (app M2 N2) :-
+  alpha_equiv M1 M2,
+  alpha_equiv N1 N2.
+alpha_equiv (abs R1) (abs R2) :-
+  pi x\ (eq_hyp x x => alpha_equiv (R1 x) (R2 x)).
 
 size (app M N) K :- size M I, size N J, K is I + J + 1.
 size (abs R) K :- pi x\ size x 1 => size (R x) N, K is N + 1.

@@ -11,6 +11,7 @@ import LambdaProlog.Kernel.Goal
   , Program
   , consultClauses
   , emptyProgram
+  , mkClause
   )
 import LambdaProlog.Kernel.Search (Solution (..), query, queryN)
 import LambdaProlog.Kernel.Term
@@ -72,6 +73,10 @@ tests =
         assertBool "no escape" $
           null $
             query emptyProgram [MetaId 0] (GForall tyO (\e -> GEq x0 e))
+    , testCase "sigma Y\\ pi z\\ Y = z  fails to escape" $
+        assertBool "no escape sigma" $
+          null $
+            query emptyProgram [] (GExists tyO (\y -> GForall tyO (\z -> GEq y z)))
     , testCase "pi x\\ F x = x  binds F to id" $
         let sols =
               query emptyProgram [MetaId 0] $
@@ -140,12 +145,12 @@ tests =
     tmp :: Int -> Term
     tmp i = meta (MetaId i)
 
-    fact predN args = Clause predN 0 args GTrue
+    fact predN args = mkClause predN 0 args GTrue
 
     appendProg =
       consultClauses
-        [ Clause appendN 1 [nil, tmp 0, tmp 0] GTrue
-        , Clause
+        [ mkClause appendN 1 [nil, tmp 0, tmp 0] GTrue
+        , mkClause
             appendN
             4
             [cons (tmp 0) (tmp 1), tmp 2, cons (tmp 0) (tmp 3)]
@@ -155,8 +160,8 @@ tests =
 
     memberProg =
       consultClauses
-        [ Clause memb 2 [tmp 0, cons (tmp 0) (tmp 1)] GTrue
-        , Clause
+        [ mkClause memb 2 [tmp 0, cons (tmp 0) (tmp 1)] GTrue
+        , mkClause
             memb
             3
             [tmp 0, cons (tmp 1) (tmp 2)]
@@ -166,8 +171,8 @@ tests =
 
     memberCutProg =
       consultClauses
-        [ Clause memb 2 [tmp 0, cons (tmp 0) (tmp 1)] GCut
-        , Clause
+        [ mkClause memb 2 [tmp 0, cons (tmp 0) (tmp 1)] GCut
+        , mkClause
             memb
             3
             [tmp 0, cons (tmp 1) (tmp 2)]
@@ -178,9 +183,9 @@ tests =
     hiddenReverseGoal =
       let l = list [n1, n2, n3]
           k = list [n3, n2, n1]
-          cNil = Clause rv 1 [nil, tmp 0, tmp 0] GTrue
+          cNil = mkClause rv 1 [nil, tmp 0, tmp 0] GTrue
           cCons =
-            Clause
+            mkClause
               rv
               4
               [cons (tmp 0) (tmp 1), tmp 2, tmp 3]

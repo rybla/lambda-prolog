@@ -12,9 +12,9 @@ import Data.Text (Text)
 
 import LambdaProlog.Error (Error)
 import LambdaProlog.Kernel.Goal (Program)
-import LambdaProlog.Kernel.Search (Solution, queryN)
+import LambdaProlog.Kernel.Search (Solution, queryNWithInterner)
 import LambdaProlog.Kernel.Term (MetaId)
-import LambdaProlog.Surface.Elab (Sig, elabModule, elabQuery)
+import LambdaProlog.Surface.Elab (Sig (..), elabModule, elabQuery)
 import LambdaProlog.Surface.Module (LoadConfig (..), loadPath)
 import LambdaProlog.Surface.Parser (parseModule, parseQuery)
 
@@ -47,4 +47,4 @@ runQueryN :: Loaded -> Int -> Text -> Either Error QueryResult
 runQueryN (Loaded sg prog) maxN qsrc = do
   t <- parseQuery "<query>" qsrc
   (qvars, g) <- elabQuery sg t
-  Right (QueryResult qvars (queryN maxN prog qvars g))
+  Right (QueryResult qvars (queryNWithInterner maxN (sigInterner sg) prog qvars g))
