@@ -10,10 +10,8 @@ import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.IO qualified as TIO
 import System.Console.Haskeline
-  ( InputT
-  , defaultSettings
+  ( defaultSettings
   , getInputLine
-  , outputStrLn
   , runInputT
   )
 import System.IO (hFlush, stdout)

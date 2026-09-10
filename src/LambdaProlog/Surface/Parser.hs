@@ -418,9 +418,10 @@ pTerm = do
   xs <- some pAbsTerm
   case xs of
     [x] -> pure x
-    _ ->
-      let sp = combineSpans (termSpan (head xs)) (termSpan (last xs))
+    x : rest ->
+      let sp = combineSpans (termSpan x) (termSpan (lastOf x rest))
        in pure (SSeq sp xs)
+    [] -> error "unreachable"
 
 pAbsTerm :: Parser STerm
 pAbsTerm = try pLam <|> pAtom
@@ -495,6 +496,11 @@ pListElem = do
   xs <- some pAbsTermNoSep
   case xs of
     [x] -> pure x
-    _ ->
-      let sp = combineSpans (termSpan (head xs)) (termSpan (last xs))
+    x : rest ->
+      let sp = combineSpans (termSpan x) (termSpan (lastOf x rest))
        in pure (SSeq sp xs)
+    [] -> error "unreachable"
+
+lastOf :: a -> [a] -> a
+lastOf x [] = x
+lastOf _ (y : ys) = lastOf y ys

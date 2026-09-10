@@ -83,18 +83,19 @@ Module accumulation is source-level inlining, which is the logical reading of mo
 | File | Contents |
 |---|---|
 | `tutorial.mod` | Guided tour of Horn clauses, `=>`, `pi`, and HOAS |
-| `lists.mod` | append, reverse, member, length, nth, zip, permute, … |
-| `maps.mod` | mapfun, mappred, foldr, foldl, filter, partition |
-| `control.mod` | once, ifte, call, ignore |
-| `nat.mod` | min, max, abs, gcd, pow, even, odd |
-| `sets.mod` | subset, union, intersect, difference |
-| `assoc.mod` | lookup, update, delassoc |
-| `trees.mod` | binary trees: member, size, flatten, map |
-| `strings.mod` | concatenation via `is` / `^` |
-| `prenex.mod` | object formulas, nnf, prenex form |
-| `hoas_lambda.mod` | untyped λ-calculus: eval, copy, subst, beta, size |
-| `typeinf.mod` | STLC type inference |
-| `tacticals.mod` | tactics and tacticals |
+| `lists.mod` | append, reverse, nth, zip, permute, isort/msort, difference lists, … |
+| `maps.mod` | map, fold, filter, partition, take_while, qsort, census example |
+| `control.mod` | once, ifte, call, unless, repeat_n |
+| `nat.mod` | gcd, lcm, factorial, fib, expression evaluator |
+| `sets.mod` | union, intersect, powerset, symmetric difference |
+| `assoc.mod` | lookup, update, phone-book example |
+| `trees.mod` | traversals, mirror, BST insert/lookup |
+| `strings.mod` | strcat, concat_all, join_with |
+| `option.mod` | none/some, map, option_of |
+| `prenex.mod` | formulas, nnf, prenex, size, occurs, closed |
+| `hoas_lambda.mod` | eval, copy, Church numerals, I/K/S |
+| `typeinf.mod` | STLC with pairs, booleans, I/K types |
+| `tacticals.mod` | then, orelse, try, repeat, progress, complete |
 | `hypothetical.mod`, `hidden_reverse.mod` | nested programs (`=>`) |
 
 Hover any token on the generated website for its role.

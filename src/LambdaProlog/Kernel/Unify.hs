@@ -165,7 +165,7 @@ flexRigid ::
   [Term] ->
   Term ->
   ST s (Either UnifyError ())
-flexRigid tr d m args t = do
+flexRigid tr _d m args t = do
   tNf <- derefNf tr t
   if occursMetaDeep m tNf
     then pure (Left (Occurs m))
@@ -175,7 +175,7 @@ flexRigid tr d m args t = do
         Left e -> pure (Left e)
         Right pats -> do
           cell <- readMeta tr m
-          inv <- invert tr d (mcLevel cell) m pats tNf
+          inv <- invert tr 0 (mcLevel cell) m pats tNf
           case inv of
             Left e -> pure (Left e)
             Right body -> do
@@ -203,44 +203,46 @@ invert ::
   [Pat] ->
   Term ->
   ST s (Either UnifyError Term)
-invert tr _d mLev m pats = go 0
+invert tr extra0 mLev m pats = go extra0
   where
     k = length pats
 
     go extra (TLam b) = do
       r <- go (extra + 1) b
       pure (TLam <$> r)
-    go extra (TApp h as) = do
-      asR <- mapM (go extra) as
-      case sequence asR of
-        Left e -> pure (Left e)
-        Right as' ->
-          case h of
-            HBound i
-              | i < extra -> pure (Right (TApp (HBound i) as'))
-              | otherwise ->
-                  let outer = i - extra
-                   in case findIndex (== PatBound outer) pats of
+    go extra (TApp h as) =
+      case h of
+        HMeta m'
+          | m' == m -> pure (Left (Occurs m))
+          | otherwise -> prune tr extra m mLev pats m' as
+        _ -> do
+          asR <- mapM (go extra) as
+          case sequence asR of
+            Left e -> pure (Left e)
+            Right as' ->
+              case h of
+                HBound i
+                  | i < extra -> pure (Right (TApp (HBound i) as'))
+                  | otherwise ->
+                      let outer = i - extra
+                       in case findIndex (== PatBound outer) pats of
+                            Just p ->
+                              let new = extra + (k - 1 - p)
+                               in pure (Right (TApp (HBound new) as'))
+                            Nothing -> pure (Left (Scope m))
+                HConst n -> do
+                  ml <- eigenLevel tr n
+                  case ml of
+                    Just lev ->
+                      case findIndex (== PatEigen n) pats of
                         Just p ->
                           let new = extra + (k - 1 - p)
                            in pure (Right (TApp (HBound new) as'))
-                        Nothing -> pure (Left (Scope m))
-            HConst n -> do
-              ml <- eigenLevel tr n
-              case ml of
-                Just lev ->
-                  case findIndex (== PatEigen n) pats of
-                    Just p ->
-                      let new = extra + (k - 1 - p)
-                       in pure (Right (TApp (HBound new) as'))
-                    Nothing
-                      | lev <= mLev -> pure (Right (TApp (HConst n) as'))
-                      | otherwise -> pure (Left (Scope m))
-                Nothing -> pure (Right (TApp (HConst n) as'))
-            HLit l -> pure (Right (TApp (HLit l) as'))
-            HMeta m'
-              | m' == m -> pure (Left (Occurs m))
-              | otherwise -> prune tr extra m mLev pats m' as'
+                        Nothing
+                          | lev <= mLev -> pure (Right (TApp (HConst n) as'))
+                          | otherwise -> pure (Left (Scope m))
+                    Nothing -> pure (Right (TApp (HConst n) as'))
+                HLit l -> pure (Right (TApp (HLit l) as'))
 
 -- | Restrict a foreign meta so it only depends on pattern variables that
 -- @m@ is allowed to mention.
@@ -256,48 +258,40 @@ prune ::
 prune tr extra m mLev pats z args = do
   zCell <- readMeta tr z
   case mcBind zCell of
-    Just v -> goInvert (applySpine v args)
+    Just v -> invert tr extra mLev m pats (applySpine v args)
     Nothing -> do
       ps <- patternArgs tr args
       case ps of
         Left e -> pure (Left e)
         Right zpats -> do
-          kept <- filterM (isAllowed tr mLev pats) zpats
+          kept <- filterM (isAllowedPat tr extra mLev pats) zpats
           if length kept == length zpats
-            then reindex extra z zpats
+            then do
+              as' <- mapM (invert tr extra mLev m pats) args
+              case sequence as' of
+                Left e -> pure (Left e)
+                Right as'' -> pure (Right (TApp (HMeta z) as''))
             else do
               z' <- freshMetaAt tr (mcLevel zCell) Nothing
               let kZ = length zpats
+                  keptIdxs = [i | (i, p) <- zip [0 ..] zpats, p `elem` kept]
                   body =
                     TApp
                       (HMeta z')
-                      [var (kZ - 1 - p) | p <- indicesKept zpats kept]
+                      [var (kZ - 1 - p) | p <- keptIdxs]
               bindMeta tr z (lams kZ body)
-              reindex extra z' kept
-  where
-    goInvert t = invert tr extra mLev m pats t
-    -- After pruning, @z'@ (or @z@) is applied to the kept pattern vars;
-    -- translate those into @m@'s λ-prefix.
-    reindex extra' z' keptPats = do
-      let args' =
-            [ case p of
-                PatBound i -> TApp (HBound (extra' + i)) []
-                PatEigen n -> TApp (HConst n) []
-              | p <- keptPats
-            ]
-      asR <- mapM (invert tr extra' mLev m pats) args'
-      case sequence asR of
-        Left e -> pure (Left e)
-        Right as' -> pure (Right (TApp (HMeta z') as'))
+              as' <- mapM (invert tr extra mLev m pats) [args !! i | i <- keptIdxs]
+              case sequence as' of
+                Left e -> pure (Left e)
+                Right as'' -> pure (Right (TApp (HMeta z') as''))
 
-    indicesKept allP kept =
-      [i | (i, p) <- zip [0 ..] allP, p `elem` kept]
-
-isAllowed :: Trail s -> Level -> [Pat] -> Pat -> ST s Bool
-isAllowed tr mLev pats p = case p of
-  PatBound {} -> pure (p `elem` pats)
+isAllowedPat :: Trail s -> Int -> Level -> [Pat] -> Pat -> ST s Bool
+isAllowedPat tr extra mLev pats p = case p of
+  PatBound i
+    | i < extra -> pure True
+    | otherwise -> pure (PatBound (i - extra) `elem` pats)
   PatEigen n
-    | p `elem` pats -> pure True
+    | PatEigen n `elem` pats -> pure True
     | otherwise -> do
         ml <- eigenLevel tr n
         pure $ case ml of
@@ -371,7 +365,11 @@ diffMeta tr m1 a1 m2 a2 = do
                   k
                   ( TApp
                       (HMeta z)
-                      [var (k - 1 - i) | (i, p) <- zip [0 ..] ps, p `elem` common]
+                      [ case findIndex (== c) ps of
+                          Just i -> var (k - 1 - i)
+                          Nothing -> var 0
+                      | c <- common
+                      ]
                   )
       bindMeta tr m1 (inst ps1)
       bindMeta tr m2 (inst ps2)

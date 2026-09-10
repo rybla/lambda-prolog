@@ -81,7 +81,7 @@ indexPage =
                   <> el "code" [] (txt "=>")
                   <> txt "."
               )
-            <> el "h2" [] (txt "What this is")
+            <> el "h2" [] (txt "What is λProlog?")
             <> el
               "p"
               []
@@ -99,7 +99,7 @@ indexPage =
             <> el
               "pre"
               [("class", "src")]
-              ( txt "stack build\nstack test\nstack run lambda-prolog -- examples/lists.mod\nstack run build-website"
+              ( txt "git clone git@github.com:rybla/lambda-prolog.git lambda-prolog\ncd lambda-prolog\nstack build\nstack run lambda-prolog -- examples/tutorial.mod"
               )
             <> el
               "p"

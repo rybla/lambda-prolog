@@ -19,9 +19,13 @@ and this project adheres to the
 
 ### Added
 
-- Example programs expanded into a small standard library: lists, maps/folds,
-  control, integers, finite sets, association lists, binary trees, strings,
-  formulas (nnf + prenex), HOAS λ-calculus, STLC type inference, and tacticals
+- Example programs expanded into a small standard library: lists (including
+  sorting and difference lists), maps/folds/qsort, control, integers
+  (factorial, Fibonacci, expression evaluator), finite sets (powerset),
+  association lists, binary search trees, strings, options, formulas
+  (nnf + prenex + occurs), HOAS λ-calculus (Church numerals, combinators),
+  STLC with pairs and booleans, and tacticals — each file includes
+  commented REPL examples
 - Builtin integer comparison goals (`<`, `>`, `=<`, `>=`) and string
   concatenation via `is` / `^`
 - Anonymous `_` wildcards; n-ary `pi` / `sigma` (`pi x y\ G` and `pi x\ y\ G`)

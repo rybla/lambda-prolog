@@ -12,7 +12,7 @@ import Data.Text (Text)
 
 import LambdaProlog.Error (Error)
 import LambdaProlog.Kernel.Goal (Program)
-import LambdaProlog.Kernel.Search (Solution, query, queryN)
+import LambdaProlog.Kernel.Search (Solution, queryN)
 import LambdaProlog.Kernel.Term (MetaId)
 import LambdaProlog.Surface.Elab (Sig, elabModule, elabQuery)
 import LambdaProlog.Surface.Module (LoadConfig (..), loadPath)

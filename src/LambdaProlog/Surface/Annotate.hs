@@ -216,11 +216,11 @@ mergeMarks =
     . groupBySpan
     . sortOn spanKey
   where
-    spanKey mk =
-      ( posLine (spanStart (markSpan mk))
-      , posCol (spanStart (markSpan mk))
-      , posLine (spanEnd (markSpan mk))
-      , posCol (spanEnd (markSpan mk))
+    spanKey m =
+      ( posLine (spanStart (markSpan m))
+      , posCol (spanStart (markSpan m))
+      , posLine (spanEnd (markSpan m))
+      , posCol (spanEnd (markSpan m))
       )
     groupBySpan [] = []
     groupBySpan (m : ms) =
@@ -278,8 +278,8 @@ marksDecl env d = case d of
   DClause t -> marksTerm env Set.empty t
   DLocal ids mty ->
     map (identMark RConst) ids ++ maybe [] marksType mty
-  DLocalKind ids mk ->
-    map (identMark RTypeCon) ids ++ maybe [] marksKind mk
+  DLocalKind ids mkind ->
+    map (identMark RTypeCon) ids ++ maybe [] marksKind mkind
   DClosed ids mty ->
     map (identMark RConst) ids ++ maybe [] marksType mty
   DExportDef ids mty ->

@@ -85,9 +85,6 @@ data EEnv = EEnv
   { eeBound :: Map Text Term
   }
 
-emptyEEnv :: EEnv
-emptyEEnv = EEnv Map.empty
-
 elabModule :: Module -> Either Error (Sig, Program)
 elabModule m0 = do
   m <- mixfixModule defaultOps m0
@@ -408,14 +405,6 @@ substConst n e (TApp h ts) =
   let ts' = map (substConst n e) ts
    in case h of
         HConst n' | n == n' -> apps e ts'
-        _ -> TApp h ts'
-
-substMeta :: MetaId -> Term -> Term -> Term
-substMeta m e (TLam t) = TLam (substMeta m e t)
-substMeta m e (TApp h ts) =
-  let ts' = map (substMeta m e) ts
-   in case h of
-        HMeta m' | m == m' -> apps e ts'
         _ -> TApp h ts'
 
 internConst :: Sig -> Ident -> Either Error Name

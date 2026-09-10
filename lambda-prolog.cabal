@@ -27,6 +27,7 @@ extra-source-files:
     examples/lists.mod
     examples/maps.mod
     examples/nat.mod
+    examples/option.mod
     examples/prenex.mod
     examples/sets.mod
     examples/strings.mod

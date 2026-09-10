@@ -70,6 +70,23 @@ tests =
         assertBool "unbound after unwind" assertUnwind
     , testCase "list cons unifies" $
         assertSucceeds (apps consN [x, a]) (apps consN [b, a])
+    , testCase "flex-rigid with meta under lambda: X = λy. R y" $ do
+        let r = meta (MetaId 1)
+            t = lam (app r (var 0))
+        assertSucceeds x t
+    , testCase "flex-rigid with meta under nested lambdas: X = λf. λx. R f x" $ do
+        let r = meta (MetaId 1)
+            t = lam (lam (apps r [var 1, var 0]))
+        assertSucceeds x t
+    , testCase "flex-rigid pruning: meta under lambda mentioning outer variable" $ do
+        -- Outer scope has binder 0 (say under an outer lam).
+        -- F has pattern [var 0]. R is applied to [local (var 0), outer (var 1)].
+        -- F (var 0) = λy. R y (var 1)
+        let fMeta = meta (MetaId 0)
+            rMeta = meta (MetaId 1)
+            outerTerm = lam (app fMeta (var 0))
+            rigidTerm = lam (lam (apps rMeta [var 0, var 1]))
+        assertSucceeds outerTerm rigidTerm
     ]
   where
     (ns, _intern) = internMany ["f", "a", "b", "c", "g", "nil", "::", "e"] emptyInterner

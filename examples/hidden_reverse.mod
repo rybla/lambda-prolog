@@ -16,3 +16,9 @@ reverse L K :-
   (rv nil A A,
    (rv (X :: L1) A R :- rv L1 (X :: A) R))
   => rv L nil K.
+
+% ---------------------------------------------------------------------------
+% Examples
+%   ?- reverse (1 :: 2 :: 3 :: nil) K.     % K = [3, 2, 1]
+% The auxiliary rv is not in the exported program: a query `rv …` from
+% outside this implication would not see those clauses.

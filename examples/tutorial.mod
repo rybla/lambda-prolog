@@ -9,9 +9,17 @@ module tutorial.
 % and fully curried. Capitalised identifiers are logic variables.
 
 type append  list A -> list A -> list A -> o.
+type member  A -> list A -> o.
+type reverse list A -> list A -> o.
 
 append nil L L.
 append (X :: L) K (X :: M) :- append L K M.
+
+member X (X :: _).
+member X (_ :: L) :- member X L.
+
+reverse nil nil.
+reverse (X :: L) K :- reverse L M, append M (X :: nil) K.
 
 % Implication (=>) adds a clause for the duration of a goal. This is
 % hypothetical reasoning: "if we had edge a b, could we prove path a c?"
@@ -34,11 +42,18 @@ ident X X.
 % Higher-order abstract syntax: object binders are meta-level lambdas.
 kind tm  type.
 type abs   (tm -> tm) -> tm.
+type app   tm -> tm -> tm.
 type copy  tm -> tm -> o.
+copy (app M N) (app P Q) :- copy M P, copy N Q.
 copy (abs R) (abs S) :- pi x\ copy x x => copy (R x) (S x).
 
-% Try:
+% ---------------------------------------------------------------------------
+% Try these at the REPL (stack run lambda-prolog -- examples/tutorial.mod)
 %   ?- append (1 :: 2 :: nil) (3 :: nil) L.
+%   ?- append L K (1 :: 2 :: nil).
+%   ?- member 2 (1 :: 2 :: 3 :: nil).
+%   ?- reverse (1 :: 2 :: 3 :: nil) K.
 %   ?- edge a b => edge b c => path a c.
 %   ?- pi x\ ident x x.
 %   ?- copy (abs (x\ x)) M.
+%   ?- copy (abs (x\ app x x)) M.

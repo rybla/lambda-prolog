@@ -6,7 +6,7 @@ import Data.Text qualified as T
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, assertEqual, testCase)
 
-import LambdaProlog.Driver (loadFile, runQueryText)
+import LambdaProlog.Driver (QueryResult (..), loadFile, runQueryN)
 import LambdaProlog.Error (renderError)
 
 tests :: TestTree
@@ -110,24 +110,120 @@ tests =
     , succeeds "trees.mod" "tmap (x\\ x) (node 1 empty empty) T"
     , succeeds "strings.mod" "strcat \"ab\" \"cd\" S"
     , succeeds "strings.mod" "empty_string \"\""
+    , succeeds "lists.mod" "null nil"
+    , fails "lists.mod" "null (1 :: nil)"
+    , succeeds "lists.mod" "nth1 1 (10 :: 20 :: nil) X"
+    , succeeds "lists.mod" "iota 1 3 L"
+    , succeeds "lists.mod" "isort (3 :: 1 :: 2 :: nil) K"
+    , succeeds "lists.mod" "msort (3 :: 1 :: 4 :: 2 :: nil) K"
+    , succeeds "lists.mod" "ordered (1 :: 2 :: 3 :: nil)"
+    , fails "lists.mod" "ordered (2 :: 1 :: nil)"
+    , succeeds "lists.mod" "palindrome (1 :: 2 :: 1 :: nil)"
+    , succeeds "lists.mod" "sublist (2 :: 3 :: nil) (1 :: 2 :: 3 :: 4 :: nil)"
+    , succeeds "lists.mod" "product_list (2 :: 3 :: 4 :: nil) N"
+    , succeeds "lists.mod" "split_at 2 (1 :: 2 :: 3 :: 4 :: nil) P S"
+    , succeeds "lists.mod" "rotate (1 :: 2 :: 3 :: nil) K"
+    , succeeds "lists.mod" "intersperse 0 (1 :: 2 :: 3 :: nil) L"
+    , succeeds "lists.mod" "replace_nth 1 (1 :: 2 :: 3 :: nil) 9 L"
+    , succeeds "lists.mod" "tails (1 :: 2 :: nil) T"
+    , succeeds "lists.mod" "inits (1 :: 2 :: nil) I"
+    , succeeds "lists.mod" "fst (pr 1 2) X"
+    , succeeds "lists.mod" "dappend (pr (1 :: H) H) (pr (2 :: 3 :: T) T) (pr L nil)"
+    , succeeds "maps.mod" "qsort (3 :: 1 :: 2 :: nil) K"
+    , succeeds "maps.mod" "take_while (x\\ x < 3) (1 :: 2 :: 3 :: nil) L"
+    , succeeds "maps.mod" "drop_while (x\\ x < 3) (1 :: 2 :: 3 :: nil) L"
+    , succeeds "maps.mod" "foldr_pred add 0 (1 :: 2 :: 3 :: nil) N"
+    , succeeds "maps.mod" "senior N"
+    , succeeds "maps.mod" "scanl (x\\ y\\ x) 0 (1 :: 2 :: nil) L"
+    , succeeds "control.mod" "unless fail true"
+    , fails "control.mod" "unless true fail"
+    , succeeds "control.mod" "repeat_n 3 true"
+    , succeeds "control.mod" "and_then true true"
+    , succeeds "control.mod" "or_else fail true"
+    , succeeds "nat.mod" "lcm 4 6 Z"
+    , succeeds "nat.mod" "factorial 5 K"
+    , succeeds "nat.mod" "fib 6 N"
+    , succeeds "nat.mod" "divides 3 12"
+    , fails "nat.mod" "divides 5 12"
+    , succeeds "nat.mod" "coprime 9 4"
+    , succeeds "nat.mod" "clamp 0 10 (~ 3) C"
+    , succeeds "nat.mod" "square 7 Y"
+    , succeeds "nat.mod" "eeval (eplus (elit 2) (etimes (elit 3) (elit 4))) N"
+    , nsols "sets.mod" "powerset (1 :: 2 :: nil) P" 4
+    , succeeds "sets.mod" "psubset (1 :: nil) (1 :: 2 :: nil)"
+    , succeeds "sets.mod" "symdiff (1 :: 2 :: nil) (2 :: 3 :: nil) U"
+    , succeeds "sets.mod" "from_list (1 :: 1 :: 2 :: nil) S"
+    , succeeds "sets.mod" "add_all (1 :: 2 :: nil) (2 :: nil) S"
+    , succeeds "assoc.mod" "lookup1 1 (pr 1 2 :: pr 1 9 :: nil) Y"
+    , succeeds "assoc.mod" "has_key 3 (pr 1 2 :: pr 3 4 :: nil)"
+    , succeeds "assoc.mod" "from_zip (1 :: 2 :: nil) (10 :: 20 :: nil) B"
+    , succeeds "assoc.mod" "dial \"ada\" N"
+    , succeeds "assoc.mod" "keys (pr 1 2 :: pr 3 4 :: nil) K"
+    , succeeds "trees.mod" "theight (node 1 (node 0 empty empty) empty) N"
+    , succeeds "trees.mod" "inorder (node 2 (node 1 empty empty) (node 3 empty empty)) L"
+    , succeeds "trees.mod" "preorder (node 2 (node 1 empty empty) (node 3 empty empty)) L"
+    , succeeds "trees.mod" "postorder (node 2 (node 1 empty empty) (node 3 empty empty)) L"
+    , succeeds "trees.mod" "mirror (node 1 (node 0 empty empty) empty) T"
+    , succeeds "trees.mod" "bst_insert 3 empty T"
+    , succeeds "trees.mod" "demo_tree T"
+    , succeeds "trees.mod" "leaf 4 T"
+    , succeeds "strings.mod" "concat_all (\"a\" :: \"b\" :: \"c\" :: nil) S"
+    , succeeds "strings.mod" "join_with \",\" (\"a\" :: \"b\" :: \"c\" :: nil) S"
+    , succeeds "option.mod" "is_none none"
+    , succeeds "option.mod" "is_some (some 3) X"
+    , succeeds "option.mod" "from_option 0 none Y"
+    , succeeds "option.mod" "from_option 0 (some 4) Y"
+    , succeeds "option.mod" "map_option (x\\ x) (some 1) R"
+    , succeeds "option.mod" "filter_option (x\\ x > 2) (some 3) (some 3)"
+    , succeeds "option.mod" "filter_option (x\\ x > 2) (some 1) none"
+    , succeeds "option.mod" "or_else_option none (some 5) (some 5)"
+    , succeeds "option.mod" "to_list (some 7) (7 :: nil)"
+    , succeeds "option.mod" "from_list_first (1 :: 2 :: nil) (some 1)"
+    , succeeds "option.mod" "option_of (x\\ x = 2) X R"
+    , succeeds "hoas_lambda.mod" "is_abs (abs (x\\ x))"
+    , succeeds "hoas_lambda.mod" "church 0 C"
+    , succeeds "hoas_lambda.mod" "church 2 C"
+    , succeeds "hoas_lambda.mod" "combinator \"I\" T"
+    , succeeds "hoas_lambda.mod" "combinator \"K\" T"
+    , succeeds "typeinf.mod" "of true bool"
+    , succeeds "typeinf.mod" "of (if true c c) i"
+    , succeeds "typeinf.mod" "of (mkpair c true) (prod i bool)"
+    , succeeds "typeinf.mod" "of (fst (mkpair c true)) i"
+    , succeeds "typeinf.mod" "ident_ty T"
+    , succeeds "typeinf.mod" "const_ty i bool"
+    , succeeds "typeinf.mod" "hastype (abs (x\\ app x c))"
+    , succeeds "prenex.mod" "fsize (and (atom a) (atom b)) N"
+    , succeeds "prenex.mod" "is_closed (atom a)"
+    , succeeds "prenex.mod" "inst (x\\ atom x) a F"
+    , succeeds "prenex.mod" "nnf (iff (atom a) (atom b)) D"
+    , succeeds "tacticals.mod" "complete qtac q truegoal"
+    , succeeds "tacticals.mod" "try stac q q"
+    , succeeds "tacticals.mod" "progress ptac p G"
+    , succeeds "tacticals.mod" "first qtac ptac p (andgoal q r)"
+    , succeeds "hypothetical.mod" "path a d"
+    , succeeds "hypothetical.mod" "cycle3"
+    , succeeds "hypothetical.mod" "via_e"
+    , succeeds "hypothetical.mod" "(edge d a) => (path b a, !)"
+    , succeeds "tutorial.mod" "member 2 (1 :: 2 :: 3 :: nil)"
+    , succeeds "tutorial.mod" "reverse (1 :: 2 :: 3 :: nil) K"
     ]
   where
     succeeds file q = testCase (file ++ " ⊢ " ++ q) $ do
-      sols <- runEx file q
+      sols <- runExN 1 file q
       assertBool "expected success" (not (null sols))
     fails file q = testCase (file ++ " ⊬ " ++ q) $ do
-      sols <- runEx file q
+      sols <- runExN 1 file q
       assertBool "expected failure" (null sols)
     nsols file q n = testCase (file ++ " # " ++ q) $ do
-      sols <- runEx file q
+      sols <- runExN (n + 1) file q
       assertEqual "solution count" n (length sols)
 
-    runEx file q = do
+    runExN n file q = do
       r <- loadFile ["examples", "."] ("examples/" ++ file)
       case r of
         Left e -> fail (T.unpack (renderError e))
         Right ld ->
-          case runQueryText ld (T.pack q) of
+          case runQueryN ld n (T.pack q) of
             Left e -> fail (T.unpack (renderError e))
-            Right sols -> pure sols
+            Right (QueryResult _ sols) -> pure sols
 
