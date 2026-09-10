@@ -270,14 +270,12 @@ zip_with P (X :: Xs) (Y :: Ys) (Z :: Zs) :-
   P X Y Z,
   zip_with P Xs Ys Zs.
 
-% ---------------------------------------------------------------------------
-% Examples (try at the REPL)
-%   ?- append (1 :: 2 :: nil) (3 :: nil) L.
-%   ?- append L K (1 :: 2 :: 3 :: nil).
-%   ?- reverse (1 :: 2 :: 3 :: nil) K.
-%   ?- nth 1 (10 :: 20 :: 30 :: nil) X.
-%   ?- iota 1 4 L.
-%   ?- isort (3 :: 1 :: 2 :: nil) K.
-%   ?- msort (3 :: 1 :: 4 :: 2 :: nil) K.
-%   ?- palindrome (1 :: 2 :: 1 :: nil).
-%   ?- dappend (pr (1 :: H) H) (pr (2 :: 3 :: T) T) (pr L nil).
+query succeeds ? append (1 :: 2 :: nil) (3 :: nil) L.
+query succeeds sample(5) ? append L K (1 :: 2 :: 3 :: nil).
+query succeeds ? reverse (1 :: 2 :: 3 :: nil) K.
+query succeeds ? nth 1 (10 :: 20 :: 30 :: nil) X.
+query succeeds ? iota 1 4 L.
+query succeeds ? isort (3 :: 1 :: 2 :: nil) K.
+query succeeds ? msort (3 :: 1 :: 4 :: 2 :: nil) K.
+query succeeds ? palindrome (1 :: 2 :: 1 :: nil).
+query succeeds ? dappend (pr (1 :: H) H) (pr (2 :: 3 :: T) T) (pr L nil).

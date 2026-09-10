@@ -87,14 +87,13 @@ combinator "K" (abs (x\ abs (y\ x))).
 combinator "S" (abs (x\ abs (y\ abs (z\ app (app x z) (app y z))))).
 
 % ---------------------------------------------------------------------------
-% Examples
-%   ?- eval (abs (x\ x)) V.
-%   ?- eval (app (abs (x\ x)) (abs (y\ y))) V.
-%   ?- copy (abs (x\ x)) M.
-%   ?- size (abs (x\ x)) N.                    % N = 2
-%   ?- subst (x\ x) (abs (y\ y)) M.
-%   ?- beta (app (abs (x\ x)) (abs (y\ y))) M.
-%   ?- church 2 C, eval (app (app C (abs (s\ s))) (abs (z\ z))) V.
-%   ?- combinator "K" K, combinator "I" I,
-%        eval (app (app K I) (abs (w\ w))) V.
-%   ?- is_abs (abs (x\ x)).
+% Example queries
+query succeeds ? eval (abs (x\ x)) V.
+query succeeds ? eval (app (abs (x\ x)) (abs (y\ y))) V.
+query succeeds ? copy (abs (x\ x)) M.
+query succeeds ? size (abs (x\ x)) N.
+query succeeds ? subst (x\ x) (abs (y\ y)) M.
+query succeeds ? beta (app (abs (x\ x)) (abs (y\ y))) M.
+query succeeds ? church 2 C, eval (app (app C (abs (s\ s))) (abs (z\ z))) V.
+query succeeds ? combinator "K" K, combinator "I" I, eval (app (app K I) (abs (w\ w))) V.
+query succeeds ? is_abs (abs (x\ x)).

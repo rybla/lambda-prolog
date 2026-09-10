@@ -6,7 +6,7 @@ import Data.Text qualified as T
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, assertEqual, testCase)
 
-import LambdaProlog.Driver (QueryResult (..), loadFile, runQueryN)
+import LambdaProlog.Driver (QueryResult (..), loadFileQuiet, runQueryN)
 import LambdaProlog.Error (renderError)
 
 tests :: TestTree
@@ -264,6 +264,7 @@ tests =
     , succeeds "option.mod" "cat_options (some 1 :: none :: some 3 :: nil) (1 :: 3 :: nil)"
     , succeeds "hypothetical.mod" "safe_path a d"
     , fails "hypothetical.mod" "(blocked a b) => safe_path a d"
+    , moduleQueries
     ]
   where
     succeeds file q = testCase (file ++ " ⊢ " ++ q) $ do
@@ -276,12 +277,55 @@ tests =
       sols <- runExN (n + 1) file q
       assertEqual "solution count" n (length sols)
 
+    moduleQueries =
+      testGroup
+        "module queries"
+        [ testCase file $ do
+            r <- loadFileQuiet ["examples", "."] ("examples/" ++ file)
+            case r of
+              Left e -> fail (T.unpack (renderError e))
+              Right _ -> pure ()
+        | file <- allExamples
+        ]
+
+    allExamples =
+      [ "assoc.mod"
+      , "coinduction.mod"
+      , "combinators.mod"
+      , "control.mod"
+      , "cps_anf.mod"
+      , "dcg.mod"
+      , "debruijn.mod"
+      , "fol_prover.mod"
+      , "hidden_reverse.mod"
+      , "hoas_lambda.mod"
+      , "hopu_meta.mod"
+      , "hypothetical.mod"
+      , "interp_scope.mod"
+      , "lists.mod"
+      , "maps.mod"
+      , "modal_logic.mod"
+      , "nat.mod"
+      , "natural_deduction.mod"
+      , "option.mod"
+      , "prenex.mod"
+      , "result.mod"
+      , "sets.mod"
+      , "stlc.mod"
+      , "strings.mod"
+      , "tacticals.mod"
+      , "trees.mod"
+      , "tutorial.mod"
+      , "typeinf.mod"
+      ]
+
     runExN n file q = do
-      r <- loadFile ["examples", "."] ("examples/" ++ file)
+      r <- loadFileQuiet ["examples", "."] ("examples/" ++ file)
       case r of
         Left e -> fail (T.unpack (renderError e))
         Right ld ->
           case runQueryN ld n (T.pack q) of
             Left e -> fail (T.unpack (renderError e))
             Right (QueryResult _ sols) -> pure sols
+
 

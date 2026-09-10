@@ -86,10 +86,7 @@ diff_and_simp F SimpDF :-
   diff F RawDF,
   simp_fun RawDF SimpDF.
 
-% ---------------------------------------------------------------------------
-% Example queries:
-%   ?- diff (x\ times_m (num 3) x) DF.
-%   ?- diff_and_simp (x\ times_m (num 3) x) DF.
-%      DF = (x\ num 3)
-%   ?- diff_and_simp (x\ plus_m (times_m x x) (num 5)) DF.
-%   ?- diff_and_simp (x\ sin_m (times_m (num 2) x)) DF.
+query succeeds ? diff (x\ times_m (num 3) x) DF.
+query succeeds ? diff_and_simp (x\ times_m (num 3) x) DF.
+query succeeds ? diff_and_simp (x\ plus_m (times_m x x) (num 5)) DF.
+query succeeds ? diff_and_simp (x\ sin_m (times_m (num 2) x)) DF.

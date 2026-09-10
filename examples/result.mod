@@ -76,13 +76,7 @@ type seq_combine A -> res (list A) B -> res (list A) B -> o.
 seq_combine X (ok Xs) (ok (X :: Xs)).
 seq_combine _ (err E) (err E).
 
-% ---------------------------------------------------------------------------
-% Example queries:
-%   ?- map_ok (x\ y\ y is x + 1) (ok 5) R.
-%      R = ok 6
-%   ?- and_then (x\ r\ r = ok (x * 2)) (ok 10) R.
-%      R = ok 20
-%   ?- partition_results (ok 1 :: err "fail" :: ok 3 :: nil) Oks Errs.
-%      Oks = 1 :: 3 :: nil, Errs = "fail" :: nil
-%   ?- sequence_results (ok 1 :: ok 2 :: nil) R.
-%      R = ok (1 :: 2 :: nil)
+query succeeds ? map_ok (x\ y\ y is x + 1) (ok 5) R.
+query succeeds ? and_then (x\ r\ r = ok (x * 2)) (ok 10) R.
+query succeeds ? partition_results (ok 1 :: err "fail" :: ok 3 :: nil) Oks Errs.
+query succeeds ? sequence_results (ok 1 :: ok 2 :: nil) R.

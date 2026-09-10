@@ -102,14 +102,6 @@ seq D (f_all A :: Gamma) Delta :-
   seq D1 (A _ :: Gamma) Delta.
 
 % ---------------------------------------------------------------------------
-% Example queries:
-%   ?- % (∀x. P(x)) → P(c)
-%      prove (f_imp (f_all (x\ f_atom "P" (x :: nil)))
-%                   (f_atom "P" (_ :: nil))).
-%      yes
-%
-%   ?- % (∀x. P(x) ∧ Q(x)) → (∀x. P(x)) ∧ (∀x. Q(x))
-%      prove (f_imp (f_all (x\ f_and (f_atom "P" (x :: nil)) (f_atom "Q" (x :: nil))))
-%                   (f_and (f_all (x\ f_atom "P" (x :: nil)))
-%                          (f_all (x\ f_atom "Q" (x :: nil))))).
-%      yes
+% Example queries
+query succeeds ? prove (f_imp (f_all (x\ f_atom "P" (x :: nil))) (f_atom "P" (_ :: nil))).
+query succeeds ? prove (f_imp (f_all (x\ f_and (f_atom "P" (x :: nil)) (f_atom "Q" (x :: nil)))) (f_and (f_all (x\ f_atom "P" (x :: nil))) (f_all (x\ f_atom "Q" (x :: nil))))).

@@ -105,14 +105,12 @@ age "pat" 41.
 
 senior N :- age N A, A > 25.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- mappred age ("bob" :: "sue" :: nil) L.     % L = [30, 24]
-%   ?- mapfun (x\ x) (1 :: 2 :: nil) L.
-%   ?- filter (x\ x > 1) (1 :: 2 :: 3 :: nil) L.  % L = [2, 3]
-%   ?- partition (x\ x > 1) (1 :: 2 :: 3 :: nil) A B.
-%   ?- qsort (3 :: 1 :: 2 :: nil) K.
-%   ?- foldr_pred add 0 (1 :: 2 :: 3 :: nil) N.    % N = 6
-%   ?- take_while (x\ x < 3) (1 :: 2 :: 3 :: nil) L.
-%   ?- senior N.
-%   ?- map2 (x\ y\ z\ z is x + y) (1 :: 2 :: nil) (10 :: 20 :: nil) L.
+query succeeds ? mappred age ("bob" :: "sue" :: nil) L.
+query succeeds ? mapfun (x\ x) (1 :: 2 :: nil) L.
+query succeeds ? filter (x\ x > 1) (1 :: 2 :: 3 :: nil) L.
+query succeeds ? partition (x\ x > 1) (1 :: 2 :: 3 :: nil) A B.
+query succeeds ? qsort (3 :: 1 :: 2 :: nil) K.
+query succeeds ? foldr_pred add 0 (1 :: 2 :: 3 :: nil) N.
+query succeeds ? take_while (x\ x < 3) (1 :: 2 :: 3 :: nil) L.
+query succeeds sample(3) ? senior N.
+query succeeds ? map2 (x\ y\ z\ z is x + y) (1 :: 2 :: nil) (10 :: 20 :: nil) L.

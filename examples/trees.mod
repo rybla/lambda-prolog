@@ -85,13 +85,11 @@ from_list (X :: L) T :- from_list L T0, bst_insert X T0 T.
 
 demo_tree T :- from_list (5 :: 3 :: 8 :: 1 :: 4 :: nil) T.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- tmember 2 (node 1 empty (node 2 empty empty)).
-%   ?- tsize (node 1 empty empty) N.
-%   ?- theight (node 1 (node 0 empty empty) empty) N.
-%   ?- inorder (node 2 (node 1 empty empty) (node 3 empty empty)) L.
-%   ?- mirror (node 1 (node 0 empty empty) empty) T.
-%   ?- bst_insert 3 empty T, bst_insert 1 T U, bst_lookup 1 U.
-%   ?- demo_tree T, inorder T L.                 % L sorted
-%   ?- tmap (x\ x) (node 1 empty empty) T.
+query succeeds ? tmember 2 (node 1 empty (node 2 empty empty)).
+query succeeds ? tsize (node 1 empty empty) N.
+query succeeds ? theight (node 1 (node 0 empty empty) empty) N.
+query succeeds ? inorder (node 2 (node 1 empty empty) (node 3 empty empty)) L.
+query succeeds ? mirror (node 1 (node 0 empty empty) empty) T.
+query succeeds ? bst_insert 3 empty T, bst_insert 1 T U, bst_lookup 1 U.
+query succeeds ? demo_tree T, inorder T L.
+query succeeds ? tmap (x\ x) (node 1 empty empty) T.

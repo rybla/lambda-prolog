@@ -145,10 +145,8 @@ preserves M :-
   eval M V,
   typeof V Ty.
 
-% ---------------------------------------------------------------------------
-% Example queries:
-%   ?- typeof (abs_tm int_ty (x\ x)) Ty.
-%   ?- eval (app_tm (abs_tm int_ty (x\ x)) (int_tm 42)) V.
-%   ?- preserves (app_tm (abs_tm int_ty (x\ x)) (int_tm 42)).
-%   ?- eval (fst_tm (pair_tm (int_tm 10) true_tm)) V.
-%   ?- eval (case_tm (inl_tm bool_ty (int_tm 7)) (x\ x) (y\ int_tm 0)) V.
+query succeeds ? typeof (abs_tm int_ty (x\ x)) Ty.
+query succeeds ? eval (app_tm (abs_tm int_ty (x\ x)) (int_tm 42)) V.
+query succeeds ? preserves (app_tm (abs_tm int_ty (x\ x)) (int_tm 42)).
+query succeeds ? eval (fst_tm (pair_tm (int_tm 10) true_tm)) V.
+query succeeds ? eval (case_tm (inl_tm bool_ty (int_tm 7)) (x\ x) (y\ int_tm 0)) V.

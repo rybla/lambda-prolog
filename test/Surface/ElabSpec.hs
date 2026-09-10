@@ -3,10 +3,12 @@ module Surface.ElabSpec (tests) where
 
 import Data.IntMap.Strict qualified as IntMap
 import Data.Text (Text)
+import Data.Text qualified as T
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (assertBool, assertEqual, testCase)
 
-import LambdaProlog.Driver (loadFile, loadSource, runQueryText)
+import LambdaProlog.Driver (Loaded (..), ModuleQueryResult (..), loadSource, runQueryText)
+import LambdaProlog.Error (renderError)
 import LambdaProlog.Kernel.Search (Solution (..))
 import LambdaProlog.Kernel.Term (intLit, stringLit)
 
@@ -170,6 +172,45 @@ tests =
                 assertEqual "one sol" 1 (length sols)
                 assertEqual "A = 2" (Just (intLit 2)) (IntMap.lookup 0 (solBinds (head sols)))
                 assertEqual "B = 3" (Just (intLit 3)) (IntMap.lookup 1 (solBinds (head sols)))
+    , testCase "in-module query succeeds passes" $
+        case loadSource "test.mod" "module test.\ntype p o.\np.\nquery succeeds ? p.\n" of
+          Left e -> fail (show e)
+          Right ld -> assertEqual "1 query executed" 1 (length (loadedQueries ld))
+    , testCase "in-module query succeeds throws on failure" $
+        case loadSource "test.mod" "module test.\ntype p o.\nquery succeeds ? p.\n" of
+          Left e -> assertBool "contains expected error" ("query expected to succeed" `T.isInfixOf` renderError e)
+          Right _ -> fail "expected query failure"
+    , testCase "in-module query fails passes on failure" $
+        case loadSource "test.mod" "module test.\ntype p o.\nquery fails ? p.\n" of
+          Left e -> fail (show e)
+          Right ld -> assertEqual "1 query executed" 1 (length (loadedQueries ld))
+    , testCase "in-module query fails throws counterexample on success" $
+        case loadSource "test.mod" "module test.\ntype p int -> o.\np 42.\nquery fails ? p X.\n" of
+          Left e -> do
+            let msg = renderError e
+            assertBool "contains expected failure" ("query expected to fail" `T.isInfixOf` msg)
+            assertBool "contains counterexample" ("X = 42" `T.isInfixOf` msg)
+          Right _ -> fail "expected failure with counterexample"
+    , testCase "in-module query sample(n) caps solutions" $
+        case loadSource "test.mod" "module test.\ntype p int -> o.\np 1.\np 2.\np 3.\nquery sample(2) ? p X.\n" of
+          Left e -> fail (show e)
+          Right ld -> do
+            let [qr] = loadedQueries ld
+            assertEqual "capped to 2" 2 (length (mqrSolutions qr))
+    , testCase "in-module query defaults to sample(1)" $
+        case loadSource "test.mod" "module test.\ntype p int -> o.\np 1.\np 2.\np 3.\nquery ? p X.\n" of
+          Left e -> fail (show e)
+          Right ld -> do
+            let [qr] = loadedQueries ld
+            assertEqual "default sample 1" 1 (length (mqrSolutions qr))
+    , testCase "in-module query typechecks against signature" $
+        case loadSource "test.mod" "module test.\nquery ? undeclared_pred.\n" of
+          Left e -> assertBool "undeclared constant error" ("undeclared constant" `T.isInfixOf` renderError e)
+          Right _ -> fail "expected typecheck error"
+    , testCase "in-module query disallows conflicting options" $
+        case loadSource "test.mod" "module test.\nquery [succeeds, fails] ? true.\n" of
+          Left e -> assertBool "conflicting options error" ("conflicting query options" `T.isInfixOf` renderError e)
+          Right _ -> fail "expected conflicting options error"
     ]
   where
     wildSrc :: Text

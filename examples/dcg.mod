@@ -113,11 +113,8 @@ parse_and_eval Tokens Result :-
   eval_ast Ast Result.
 
 % ---------------------------------------------------------------------------
-% Example queries:
-%   ?- parse_sentence ("the" :: "cat" :: "sleeps" :: nil).
-%      yes
-%   ?- parse_sentence ("the" :: "cats" :: "sleeps" :: nil).
-%      no (agreement failure)
-%   ?- expr_p Ast ("2" :: "+" :: "3" :: "*" :: "4" :: nil) nil.
-%   ?- parse_and_eval ("2" :: "+" :: "3" :: "*" :: "4" :: nil) Res.
-%      Res = 14
+% Example queries
+query succeeds ? parse_sentence ("the" :: "cat" :: "sleeps" :: nil).
+query fails ? parse_sentence ("the" :: "cats" :: "sleeps" :: nil).
+query succeeds ? expr_p Ast ("2" :: "+" :: "3" :: "*" :: "4" :: nil) nil.
+query succeeds ? parse_and_eval ("2" :: "+" :: "3" :: "*" :: "4" :: nil) Res.

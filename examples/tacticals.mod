@@ -50,12 +50,10 @@ qtac q truegoal.
 rtac r truegoal.
 stac s p.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- idtac p p.
-%   ?- ptac p (andgoal q r).
-%   ?- then ptac (orelse qtac rtac) p (andgoal truegoal truegoal).
-%   ?- complete (then ptac (orelse qtac rtac)) p.
-%   ?- try stac q q.                   % stac does not apply; idtac
-%   ?- progress ptac p G.              % G ≠ p
-%   ?- first qtac ptac p (andgoal q r).
+query succeeds ? idtac p p.
+query succeeds ? ptac p (andgoal q r).
+query succeeds ? then ptac (orelse qtac rtac) p (andgoal truegoal truegoal).
+query fails ? complete (then ptac (orelse qtac rtac)) p truegoal.
+query succeeds ? try stac q q.                   % stac does not apply; idtac
+query succeeds ? progress ptac p G.              % G ≠ p
+query succeeds ? first qtac ptac p (andgoal q r).

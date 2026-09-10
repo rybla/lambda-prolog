@@ -276,6 +276,7 @@ marksDecl env d = case d of
   DTypeAbbrev n args ty ->
     identMark RTypeCon n : map (identMark RTyVar) args ++ marksType ty
   DClause t -> marksTerm env Set.empty t
+  DQuery _ t -> marksTerm env Set.empty t
   DLocal ids mty ->
     map (identMark RConst) ids ++ maybe [] marksType mty
   DLocalKind ids mkind ->
@@ -396,6 +397,10 @@ keywords =
   , "prefix"
   , "postfixl"
   , "postfix"
+  , "query"
+  , "succeeds"
+  , "fails"
+  , "sample"
   ]
 
 -- Longer keywords first so "typeabbrev" wins over "type".

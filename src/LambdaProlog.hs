@@ -63,7 +63,9 @@ module LambdaProlog
   , queryN
     -- * Driver
   , Loaded (..)
+  , ModuleQueryResult (..)
   , loadFile
+  , loadFileQuiet
   , loadSource
   , runQueryText
     -- * Pretty-printing
@@ -92,7 +94,14 @@ import LambdaProlog.Kernel.Goal
   , emptyProgram
   )
 import LambdaProlog.Kernel.Kind (Kind (..), kindArity)
-import LambdaProlog.Driver (Loaded (..), loadFile, loadSource, runQueryText)
+import LambdaProlog.Driver
+  ( Loaded (..)
+  , ModuleQueryResult (..)
+  , loadFile
+  , loadFileQuiet
+  , loadSource
+  , runQueryText
+  )
 import LambdaProlog.Kernel.Search (Solution (..), query, queryN)
 import LambdaProlog.Kernel.Pretty
   ( PrintEnv (..)

@@ -5,6 +5,8 @@ module LambdaProlog.Surface.Elab
   , preludeSig
   , elabModule
   , elabQuery
+  , elabQueryWithFrees
+  , renderSTerm
   ) where
 
 import Control.Monad (foldM)
@@ -95,12 +97,17 @@ elabModule m0 = do
 
 elabQuery :: Sig -> STerm -> Either Error ([MetaId], Goal)
 elabQuery sg t0 = do
+  (mapping, g) <- elabQueryWithFrees sg t0
+  pure (map snd mapping, g)
+
+elabQueryWithFrees :: Sig -> STerm -> Either Error ([(Text, MetaId)], Goal)
+elabQueryWithFrees sg t0 = do
   t <- mixfixTerm defaultOps (renameWildcards t0)
   let frees = freeVarsClause t
       mapping = zip frees (map MetaId [0 ..])
       env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping]) (length frees)
   g <- elabGoal sg env t
-  pure (map snd mapping, g)
+  pure (mapping, g)
 
 --------------------------------------------------------------------------------
 -- Signature declarations
@@ -129,6 +136,7 @@ elabDeclSig sg d = case d of
   DLocalKind ids _ ->
     foldM (\s i -> addTyCon s i KType) sg ids
   DClause {} -> Right sg
+  DQuery {} -> Right sg
 
 addTyCon :: Sig -> Ident -> Kind -> Either Error Sig
 addTyCon sg i k =
@@ -504,3 +512,33 @@ rw t = case t of
 
 packInt :: Int -> Text
 packInt n = T.pack (show n)
+
+-- | Render surface term for informative error and query messages.
+renderSTerm :: STerm -> Text
+renderSTerm tm = case tm of
+  SId i -> identName i
+  SInt _ n -> T.pack (show n)
+  SString _ s -> T.pack (show s)
+  SCut _ -> "!"
+  SLam _ x _ b -> identName x <> "\\ " <> renderSTerm b
+  SApp _ (SApp _ (SId (Ident op _)) l) r
+    | isSymOp op -> renderAtom l <> " " <> op <> " " <> renderAtom r
+  SApp _ f a -> renderSTerm f <> " " <> renderAtom a
+  SSeq _ xs -> T.unwords (map renderAtom xs)
+  SList _ es tl ->
+    "[" <> T.intercalate ", " (map renderSTerm es)
+      <> (case tl of
+            Nothing -> ""
+            Just t -> " | " <> renderSTerm t)
+      <> "]"
+  SParen _ a -> "(" <> renderSTerm a <> ")"
+  SAnn _ a _ -> renderSTerm a
+
+isSymOp :: Text -> Bool
+isSymOp op = op `elem` [":-", ",", ";", "=>", "=", "<", ">", "=<", ">=", "::", "+", "-", "*", "div", "mod", "^", "is"]
+
+renderAtom :: STerm -> Text
+renderAtom tm = case tm of
+  SApp {} -> "(" <> renderSTerm tm <> ")"
+  SLam {} -> "(" <> renderSTerm tm <> ")"
+  _ -> renderSTerm tm

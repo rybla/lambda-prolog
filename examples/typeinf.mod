@@ -61,14 +61,12 @@ ident_ty (arrow A A) :- of (abs (x\ x)) (arrow A A).
 % K combinator: ⊢ λx. λy. x : A → B → A
 const_ty A B :- of (abs (x\ abs (y\ x))) (arrow A (arrow B A)).
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- of (abs (y\ y)) (arrow A A).
-%   ?- of (app (abs (x\ x)) c) i.
-%   ?- of true bool.
-%   ?- of (if true c c) i.
-%   ?- of (mkpair c true) (prod i bool).
-%   ?- of (fst (mkpair c true)) i.
-%   ?- ident_ty T.
-%   ?- const_ty i bool.
-%   ?- hastype (abs (x\ app x c)).
+query succeeds ? of (abs (y\ y)) (arrow A A).
+query succeeds ? of (app (abs (x\ x)) c) i.
+query succeeds ? of true bool.
+query succeeds ? of (if true c c) i.
+query succeeds ? of (mkpair c true) (prod i bool).
+query succeeds ? of (fst (mkpair c true)) i.
+query succeeds ? ident_ty T.
+query succeeds ? const_ty i bool.
+query succeeds ? hastype (abs (x\ app x c)).

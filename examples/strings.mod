@@ -26,10 +26,8 @@ join_with Sep (S :: T :: L) U :-
   W is S ^ Sep,
   U is W ^ V.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- strcat "ab" "cd" S.                     % S = "abcd"
-%   ?- empty_string "".
-%   ?- concat_all ("a" :: "b" :: "c" :: nil) S.  % S = "abc"
-%   ?- join_with "," ("a" :: "b" :: "c" :: nil) S.  % S = "a,b,c"
-%   ?- S is "hello" ^ " " ^ "world".
+query succeeds ? strcat "ab" "cd" S.
+query succeeds ? empty_string "".
+query succeeds ? concat_all ("a" :: "b" :: "c" :: nil) S.
+query succeeds ? join_with "," ("a" :: "b" :: "c" :: nil) S.
+query succeeds ? S is "hello" ^ " " ^ "world".

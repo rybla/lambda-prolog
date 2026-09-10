@@ -81,15 +81,13 @@ eeval (eplus A B) N :- eeval A I, eeval B J, N is I + J.
 eeval (etimes A B) N :- eeval A I, eeval B J, N is I * J.
 eeval (eminus A B) N :- eeval A I, eeval B J, N is I - J.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- min 3 1 M.              % M = 1
-%   ?- gcd 12 8 D.             % D = 4
-%   ?- lcm 4 6 Z.              % Z = 12
-%   ?- factorial 5 K.          % K = 120
-%   ?- fib 7 N.                % N = 13
-%   ?- between 1 3 N.          % N = 1, 2, 3
-%   ?- pow 2 8 N.              % N = 256
-%   ?- divides 3 12.
-%   ?- eeval (eplus (elit 2) (etimes (elit 3) (elit 4))) N.   % N = 14
-%   ?- clamp 0 10 (~ 3) C.     % C = 0
+query succeeds ? min 3 1 M.
+query succeeds ? gcd 12 8 D.
+query succeeds ? lcm 4 6 Z.
+query succeeds ? factorial 5 K.
+query succeeds ? fib 7 N.
+query succeeds sample(3) ? between 1 3 N.
+query succeeds ? pow 2 8 N.
+query succeeds ? divides 3 12.
+query succeeds ? eeval (eplus (elit 2) (etimes (elit 3) (elit 4))) N.
+query succeeds ? clamp 0 10 (~ 3) C.

@@ -71,15 +71,13 @@ powerset nil nil.
 powerset (X :: S) (X :: P) :- powerset S P.
 powerset (_ :: S) P :- powerset S P.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- subset (1 :: nil) (1 :: 2 :: nil).
-%   ?- union (1 :: nil) (1 :: 2 :: nil) U.
-%   ?- intersect (1 :: 2 :: nil) (2 :: 3 :: nil) I.
-%   ?- difference (1 :: 2 :: 3 :: nil) (2 :: nil) D.
-%   ?- disjoint (1 :: nil) (2 :: nil).
-%   ?- seteq (1 :: 2 :: nil) (2 :: 1 :: nil).
-%   ?- card (1 :: 1 :: 2 :: nil) N.            % N = 2
-%   ?- powerset (1 :: 2 :: nil) P.             % four subsets
-%   ?- psubset (1 :: nil) (1 :: 2 :: nil).
-%   ?- add_all (1 :: 1 :: 2 :: nil) nil S.
+query succeeds ? subset (1 :: nil) (1 :: 2 :: nil).
+query succeeds ? union (1 :: nil) (1 :: 2 :: nil) U.
+query succeeds ? intersect (1 :: 2 :: nil) (2 :: 3 :: nil) I.
+query succeeds ? difference (1 :: 2 :: 3 :: nil) (2 :: nil) D.
+query succeeds ? disjoint (1 :: nil) (2 :: nil).
+query succeeds ? seteq (1 :: 2 :: nil) (2 :: 1 :: nil).
+query succeeds ? card (1 :: 1 :: 2 :: nil) N.
+query succeeds sample(4) ? powerset (1 :: 2 :: nil) P.
+query succeeds ? psubset (1 :: nil) (1 :: 2 :: nil).
+query succeeds ? add_all (1 :: 1 :: 2 :: nil) nil S.

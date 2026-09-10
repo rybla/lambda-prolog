@@ -70,6 +70,28 @@ tests =
             case mixfixTerm defaultOps t of
               Left e -> fail (show e)
               Right t' -> assertBool "resolved" (isApp t')
+    , testCase "parse query command variants" $ do
+        let src = "module q.\n\
+                  \query ? true.\n\
+                  \query succeeds ? true.\n\
+                  \query fails ? fail.\n\
+                  \query sample(3) ? true.\n\
+                  \query [succeeds, sample(2)] ? true.\n\
+                  \query succeeds sample(5) ? true.\n"
+        case parseModule "q.mod" src of
+          Left e -> fail (show e)
+          Right m -> do
+            let decls = modDecls m
+            assertEqual "6 query decls" 6 (length decls)
+            case decls of
+              [ DQuery [] _
+                , DQuery [QOSucceeds] _
+                , DQuery [QOFails] _
+                , DQuery [QOSample 3] _
+                , DQuery [QOSucceeds, QOSample 2] _
+                , DQuery [QOSucceeds, QOSample 5] _
+                ] -> pure ()
+              other -> fail ("unexpected parsed decls: " ++ show other)
     ]
   where
     seqLen (SSeq _ xs) = length xs

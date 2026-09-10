@@ -112,10 +112,8 @@ d_eval (dapp M N) V :-
   d_eval Step V.
 
 % ---------------------------------------------------------------------------
-% Example queries:
-%   ?- hoas_to_debruijn (habs (x\ x)) D.
-%      D = dlam (dvar 0)
-%   ?- hoas_to_debruijn (habs (x\ habs (y\ x))) D.
-%      D = dlam (dlam (dvar 1))
-%   ?- debruijn_to_hoas (dlam (dvar 0)) H.
-%   ?- d_eval (dapp (dlam (dvar 0)) (dlam (dlam (dvar 1)))) V.
+% Example queries
+query succeeds ? hoas_to_debruijn (habs (x\ x)) D.
+query succeeds ? hoas_to_debruijn (habs (x\ habs (y\ x))) D.
+query succeeds ? debruijn_to_hoas (dlam (dvar 0)) H.
+query succeeds ? d_eval (dapp (dlam (dvar 0)) (dlam (dlam (dvar 1)))) V.

@@ -25,6 +25,7 @@ import Text.Megaparsec
   , optional
   , parse
   , satisfy
+  , sepBy
   , sepBy1
   , some
   , try
@@ -117,6 +118,10 @@ keywords =
   , "prefixr"
   , "postfix"
   , "postfixl"
+  , "query"
+  , "succeeds"
+  , "fails"
+  , "sample"
   ]
 
 isIdentStart :: Char -> Bool
@@ -245,6 +250,7 @@ pDecl =
     , try pClosed
     , try pExportDef
     , try pUseOnly
+    , try pQueryDecl
     , pClause
     ]
 
@@ -347,6 +353,40 @@ pClause = do
   t <- pTerm
   _ <- symbol "."
   pure (DClause t)
+
+pQueryDecl :: Parser Decl
+pQueryDecl = do
+  pKeyword "query"
+  opts <- pQueryOptions
+  _ <- try (symbol "?-") <|> symbol "?"
+  t <- pTerm
+  _ <- symbol "."
+  pure (DQuery opts t)
+
+pQueryOptions :: Parser [QueryOption]
+pQueryOptions =
+  choice
+    [ try $ between (symbol "[") (symbol "]") (pOption `sepBy` optional (symbol ","))
+    , try $ between (symbol "(") (symbol ")") (pOption `sepBy` optional (symbol ","))
+    , many (try pOption)
+    ]
+
+pOption :: Parser QueryOption
+pOption =
+  choice
+    [ QOSucceeds <$ pKeyword "succeeds"
+    , QOFails <$ pKeyword "fails"
+    , pSample
+    ]
+
+pSample :: Parser QueryOption
+pSample = do
+  pKeyword "sample"
+  n <- choice
+    [ between (symbol "(") (symbol ")") L.decimal
+    , lexeme L.decimal
+    ]
+  pure (QOSample (fromInteger n))
 
 --------------------------------------------------------------------------------
 -- Kinds and types

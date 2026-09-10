@@ -19,7 +19,8 @@ import LambdaProlog.Kernel.Goal (Program)
 import LambdaProlog.Surface.Elab (Sig, elabModule)
 import LambdaProlog.Surface.Parser (parseModule)
 import LambdaProlog.Surface.Syntax
-  ( Ident (..)
+  ( Decl
+  , Ident (..)
   , Module (..)
   , Preamble (..)
   , identName
@@ -32,7 +33,7 @@ data LoadConfig = LoadConfig
 defaultLoadConfig :: LoadConfig
 defaultLoadConfig = LoadConfig ["."]
 
-loadPath :: LoadConfig -> FilePath -> IO (Either Error (Sig, Program))
+loadPath :: LoadConfig -> FilePath -> IO (Either Error (Sig, Program, [Decl]))
 loadPath cfg path = do
   r <- collect cfg Set.empty path
   case r of
@@ -48,7 +49,10 @@ loadPath cfg path = do
                     { modDecls = decls
                     , modPreamble = Preamble [] [] [] []
                     }
-       in pure (combined >>= elabModule)
+       in pure $ do
+            comb <- combined
+            (sg, prog) <- elabModule comb
+            pure (sg, prog, modDecls comb)
 
 -- | Modules in dependency order (accumulated first).
 collect :: LoadConfig -> Set FilePath -> FilePath -> IO (Either Error [Module])

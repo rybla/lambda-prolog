@@ -99,13 +99,11 @@ is_closed B :- pi x\ not (occurs x B).
 
 inst B T (B T).
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- prenex (all (x\ atom x)) D.
-%   ?- prenex (and (all (x\ atom x)) (atom a)) D.
-%   ?- nnf (neg (and (atom a) (atom a))) D.
-%   ?- nnf (neg (all (x\ atom x))) D.
-%   ?- fsize (and (atom a) (atom b)) N.
-%   ?- is_closed (atom a).
-%   ?- pi x\ occurs x (atom x).
-%   ?- inst (x\ atom x) a F.
+query succeeds ? prenex (all (x\ atom x)) D.
+query succeeds ? prenex (and (all (x\ atom x)) (atom a)) D.
+query succeeds ? nnf (neg (and (atom a) (atom a))) D.
+query succeeds ? nnf (neg (all (x\ atom x))) D.
+query succeeds ? fsize (and (atom a) (atom b)) N.
+query succeeds ? is_closed (atom a).
+query succeeds ? pi x\ occurs x (atom x).
+query succeeds ? inst (x\ atom x) a F.

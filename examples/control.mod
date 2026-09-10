@@ -38,14 +38,14 @@ repeat_n 0 _.
 repeat_n N G :- N > 0, G, M is N - 1, repeat_n M G.
 
 % ---------------------------------------------------------------------------
-% Examples
-%   ?- once true.
-%   ?- once (true, true).
-%   ?- once (fail, true).                      % fails
-%   ?- ifte true true fail.
-%   ?- ifte fail fail true.
-%   ?- ignore fail.
-%   ?- unless fail true.
-%   ?- unless true fail.                       % fails
-%   ?- call (true ; fail).
-%   ?- repeat_n 3 true.
+% Example queries
+query succeeds ? once true.
+query succeeds ? once (true, true).
+query fails ? once (fail, true).
+query succeeds ? ifte true true fail.
+query succeeds ? ifte fail fail true.
+query succeeds ? ignore fail.
+query succeeds ? unless fail true.
+query fails ? unless true fail.
+query succeeds ? call (true ; fail).
+query succeeds ? repeat_n 3 true.

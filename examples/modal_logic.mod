@@ -88,9 +88,7 @@ type test_axiom_4 world -> form -> o.
 test_axiom_4 W A :-
   sat W (m_imp (box A) (box (box A))).
 
-% ---------------------------------------------------------------------------
-% Example queries:
-%   ?- (acc w0 w1, val w1 "p") => sat w0 (dia (atom "p")).
-%   ?- (acc w0 w1, val w1 "p") => sat w0 (box (atom "p")).
-%   ?- test_axiom_k w0 (atom "p") (atom "q").
-%   ?- test_axiom_t w0 (atom "p").
+query succeeds ? (acc w0 w1, val w1 "p") => sat w0 (dia (atom "p")).
+query fails ? (acc w0 w1, val w1 "p") => sat w0 (box (atom "p")).
+query succeeds ? test_axiom_k w0 (atom "p") (atom "q").
+query succeeds ? test_axiom_t w0 (atom "p").

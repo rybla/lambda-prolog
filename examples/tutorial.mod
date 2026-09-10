@@ -47,13 +47,11 @@ type copy  tm -> tm -> o.
 copy (app M N) (app P Q) :- copy M P, copy N Q.
 copy (abs R) (abs S) :- pi x\ copy x x => copy (R x) (S x).
 
-% ---------------------------------------------------------------------------
-% Try these at the REPL (stack run lambda-prolog -- examples/tutorial.mod)
-%   ?- append (1 :: 2 :: nil) (3 :: nil) L.
-%   ?- append L K (1 :: 2 :: nil).
-%   ?- member 2 (1 :: 2 :: 3 :: nil).
-%   ?- reverse (1 :: 2 :: 3 :: nil) K.
-%   ?- edge a b => edge b c => path a c.
-%   ?- pi x\ ident x x.
-%   ?- copy (abs (x\ x)) M.
-%   ?- copy (abs (x\ app x x)) M.
+query succeeds ? append (1 :: 2 :: nil) (3 :: nil) L.
+query succeeds sample(3) ? append L K (1 :: 2 :: nil).
+query succeeds ? member 2 (1 :: 2 :: 3 :: nil).
+query succeeds ? reverse (1 :: 2 :: 3 :: nil) K.
+query succeeds ? edge a b => edge b c => path a c.
+query succeeds ? pi x\ ident x x.
+query succeeds ? copy (abs (x\ x)) M.
+query fails ? copy (abs (x\ app x x)) M.

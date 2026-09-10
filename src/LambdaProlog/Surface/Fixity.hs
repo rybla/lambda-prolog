@@ -67,6 +67,7 @@ mixfixModule tab0 m = do
 mixfixDecl :: OpTable -> Decl -> Either Error Decl
 mixfixDecl tab d = case d of
   DClause t -> DClause <$> mixfixTerm tab t
+  DQuery opts t -> DQuery opts <$> mixfixTerm tab t
   _ -> Right d
 
 mixfixTerm :: OpTable -> STerm -> Either Error STerm

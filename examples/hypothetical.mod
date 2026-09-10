@@ -44,12 +44,10 @@ cycle3 :-
 % Temporarily add e with d → e → a, so b reaches a.
 via_e :- (edge d e, edge e a) => (path b a, !).
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- path a d.                         % base graph
-%   ?- path a c.                         % fails (no edge b c)
-%   ?- edge b c => path a c.             % succeeds hypothetically
-%   ?- connected a d.
-%   ?- cycle3.
-%   ?- via_e.                            % walk b → d → e → a
-%   ?- (edge d a) => path b a.           % walk b → d → a
+query succeeds ? path a d.
+query fails ? path a c.
+query succeeds ? edge b c => path a c.
+query succeeds ? connected a d.
+query succeeds ? cycle3.
+query succeeds ? via_e.
+query succeeds ? (edge d a) => path b a.

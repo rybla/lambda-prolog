@@ -10,6 +10,7 @@ module LambdaProlog.Surface.Syntax
   , STerm (..)
   , termSpan
   , Decl (..)
+  , QueryOption (..)
   , Preamble (..)
   , ModuleKind (..)
   , Module (..)
@@ -92,6 +93,13 @@ data Decl
   | DExportDef [Ident] (Maybe SType)
   | DUseOnly [Ident] (Maybe SType)
   | DClause STerm
+  | DQuery [QueryOption] STerm
+  deriving stock (Eq, Show)
+
+data QueryOption
+  = QOSucceeds
+  | QOFails
+  | QOSample Int
   deriving stock (Eq, Show)
 
 data Preamble = Preamble

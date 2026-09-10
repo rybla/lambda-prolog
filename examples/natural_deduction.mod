@@ -41,13 +41,6 @@ has_proof (pair_p P Q) (p_and A B) :-
   has_proof P A,
   has_proof Q B.
 
-% Conjunction elimination
-has_proof (fst_p P) A :-
-  has_proof P (p_and A _).
-
-has_proof (snd_p P) B :-
-  has_proof P (p_and _ B).
-
 % Disjunction introduction
 has_proof (inl_p B P) (p_or A B) :-
   has_proof P A.
@@ -55,15 +48,22 @@ has_proof (inl_p B P) (p_or A B) :-
 has_proof (inr_p A P) (p_or A B) :-
   has_proof P B.
 
+% Implication introduction (hypothetical deduction)
+has_proof (lam_p A Body) (p_imp A B) :-
+  pi x\ (has_proof x A => has_proof (Body x) B).
+
+% Conjunction elimination
+has_proof (fst_p P) A :-
+  has_proof P (p_and A _).
+
+has_proof (snd_p P) B :-
+  has_proof P (p_and _ B).
+
 % Disjunction elimination (proof by cases)
 has_proof (case_p P L R) C :-
   has_proof P (p_or A B),
   (pi x\ has_proof x A => has_proof (L x) C),
   (pi y\ has_proof y B => has_proof (R y) C).
-
-% Implication introduction (hypothetical deduction)
-has_proof (lam_p A Body) (p_imp A B) :-
-  pi x\ (has_proof x A => has_proof (Body x) B).
 
 % Implication elimination (Modus Ponens)
 has_proof (app_p F Arg) B :-
@@ -78,15 +78,13 @@ has_proof (abort_p C P) C :-
 proves Prop Proof :-
   has_proof Proof Prop.
 
-% ---------------------------------------------------------------------------
-% Example queries:
-%   ?- % Identity: A -> A
-%      proves (p_imp (p_atom "A") (p_atom "A")) Proof.
-%      Proof = lam_p (p_atom "A") (x\ x)
-%
-%   ?- % And commutativity: A and B -> B and A
-%      has_proof (lam_p (p_and (p_atom "a") (p_atom "b"))
-%                   (p\ pair_p (snd_p p) (fst_p p)))
-%                (p_imp (p_and (p_atom "a") (p_atom "b"))
-%                       (p_and (p_atom "b") (p_atom "a"))).
-%      yes
+% Identity: A -> A
+query succeeds ?
+  proves (p_imp (p_atom "A") (p_atom "A")) (lam_p (p_atom "A") (x\ x)).
+
+% And commutativity: A and B -> B and A
+query succeeds ?
+  has_proof (lam_p (p_and (p_atom "a") (p_atom "b"))
+               (p\ pair_p (snd_p p) (fst_p p)))
+            (p_imp (p_and (p_atom "a") (p_atom "b"))
+                   (p_and (p_atom "b") (p_atom "a"))).

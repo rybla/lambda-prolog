@@ -105,16 +105,14 @@ exec_res (sif Cond Then Else) Res :-
   (eval_b Cond, !, exec_res Then Res) ;
   exec_res Else Res.
 
-% ---------------------------------------------------------------------------
-% Example queries:
-%   ?- exec_res (slet "x" (elit 10)
-%                (slet "y" (elit 20)
-%                  (sresult (eadd (evar "x") (evar "y"))))) Res.
-%      Res = 30
-%
-%   ?- % Shadowing: outer x=10, inner x=5, result uses inner x
-%      exec_res (slet "x" (elit 10)
-%                (sseq (slet "x" (elit 5)
-%                        (sresult (emul (evar "x") (elit 2))))
-%                      (sresult (evar "x")))) Res.
-%      Res = 10
+query succeeds ?
+  exec_res (slet "x" (elit 10)
+             (slet "y" (elit 20)
+               (sresult (eadd (evar "x") (evar "y"))))) Res.
+
+% Shadowing: outer x=10, inner x=5, result uses inner x
+query succeeds ?
+  exec_res (slet "x" (elit 10)
+             (sseq (slet "x" (elit 5)
+                     (sresult (emul (evar "x") (elit 2))))
+                   (sresult (evar "x")))) Res.

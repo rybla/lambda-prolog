@@ -57,18 +57,8 @@ reduce M V :-
   reduce M1 V.
 
 % ---------------------------------------------------------------------------
-% Example queries:
-%   ?- % Compile identity function \x. x into combinators
-%      bracket (x\ x) C.
-%      C = c_i
-%
-%   ?- % Compile constant function \x. y into combinators
-%      bracket (x\ c_i) C.
-%      C = c_app c_k c_i
-%
-%   ?- % Compile \x. \y. x into combinators
-%      bracket (x\ c_app (c_app c_s c_k) c_k) C.
-%
-%   ?- % Reduce (I (K c_s c_i))
-%      reduce (c_app c_i (c_app (c_app c_k c_s) c_i)) Res.
-%      Res = c_s
+% Example queries
+query succeeds ? bracket (x\ x) C.
+query succeeds ? bracket (x\ c_i) C.
+query succeeds ? bracket (x\ c_app (c_app c_s c_k) c_k) C.
+query succeeds ? reduce (c_app c_i (c_app (c_app c_k c_s) c_i)) Res.

@@ -47,13 +47,13 @@ phone "gottlob" 303.
 dial Name Number :- phone Name Number.
 
 % ---------------------------------------------------------------------------
-% Examples
-%   ?- addassoc 1 2 nil L.
-%   ?- lookup 1 (pr 1 2 :: pr 3 4 :: nil) Y.
-%   ?- lookup1 "a" (pr "a" 1 :: pr "a" 2 :: nil) Y.    % Y = 1 only
-%   ?- update 1 9 (pr 1 2 :: nil) L.
-%   ?- delassoc 1 (pr 1 2 :: pr 3 4 :: nil) L.
-%   ?- has_key 3 (pr 1 2 :: pr 3 4 :: nil).
-%   ?- from_zip (1 :: 2 :: nil) (10 :: 20 :: nil) B.
-%   ?- dial "ada" N.
-%   ?- keys (pr 1 2 :: pr 3 4 :: nil) K.
+% Example queries
+query succeeds ? addassoc 1 2 nil L.
+query succeeds ? lookup 1 (pr 1 2 :: pr 3 4 :: nil) Y.
+query succeeds sample(1) ? lookup1 "a" (pr "a" 1 :: pr "a" 2 :: nil) Y.
+query succeeds ? update 1 9 (pr 1 2 :: nil) L.
+query succeeds ? delassoc 1 (pr 1 2 :: pr 3 4 :: nil) L.
+query succeeds ? has_key 3 (pr 1 2 :: pr 3 4 :: nil).
+query succeeds ? from_zip (1 :: 2 :: nil) (10 :: 20 :: nil) B.
+query succeeds ? dial "ada" N.
+query succeeds ? keys (pr 1 2 :: pr 3 4 :: nil) K.

@@ -27,10 +27,8 @@
   <span class="lp-impl" data-tip="hypothetical implication (=&gt;): left-hand clauses are added while proving the right-hand goal" tabindex="0">=&gt;</span> <span class="lp-pred" data-tip="predicate rv — declared at type … → o" tabindex="0">rv</span> <span class="lp-var" data-tip="logic variable L — unified during proof search" tabindex="0">L</span> <span class="lp-const" data-tip="constant nil — the empty list" tabindex="0">nil</span> <span class="lp-var" data-tip="logic variable K — unified during proof search" tabindex="0">K</span><span class="lp-punct" data-tip=". — ends a declaration or clause" tabindex="0">.</span>
 
 <span class="lp-comment" data-tip="comment" tabindex="0">% ---------------------------------------------------------------------------</span>
-<span class="lp-comment" data-tip="comment" tabindex="0">% Examples</span>
-<span class="lp-comment" data-tip="comment" tabindex="0">%   ?- reverse (1 :: 2 :: 3 :: nil) K.     % K = [3, 2, 1]</span>
-<span class="lp-comment" data-tip="comment" tabindex="0">% The auxiliary rv is not in the exported program: a query `rv …` from</span>
-<span class="lp-comment" data-tip="comment" tabindex="0">% outside this implication would not see those clauses.</span>
+<span class="lp-comment" data-tip="comment" tabindex="0">% Example queries</span>
+<span class="lp-kw" data-tip="keyword query" tabindex="0">query</span> <span class="lp-kw" data-tip="keyword succeeds" tabindex="0">succeeds</span> ? <span class="lp-pred" data-tip="predicate reverse — declared at type … → o" tabindex="0">reverse</span> <span class="lp-punct" data-tip="( — grouping" tabindex="0">(</span><span class="lp-lit" data-tip="literal 1" tabindex="0">1</span> <span class="lp-op" data-tip=":: — list cons (infixr)" tabindex="0">::</span> <span class="lp-lit" data-tip="literal 2" tabindex="0">2</span> <span class="lp-op" data-tip=":: — list cons (infixr)" tabindex="0">::</span> <span class="lp-lit" data-tip="literal 3" tabindex="0">3</span> <span class="lp-op" data-tip=":: — list cons (infixr)" tabindex="0">::</span> <span class="lp-const" data-tip="constant nil — the empty list" tabindex="0">nil</span><span class="lp-punct" data-tip=") — grouping" tabindex="0">)</span> <span class="lp-var" data-tip="logic variable K — unified during proof search" tabindex="0">K</span><span class="lp-punct" data-tip=". — ends a declaration or clause" tabindex="0">.</span>
 </pre></main>
 <footer>λProlog — higher-order hereditary Harrop programs</footer>
 <div id="tip" role="tooltip" hidden="hidden"></div>

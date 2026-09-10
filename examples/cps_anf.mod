@@ -80,12 +80,7 @@ cps (app_e E1 E2) K Out :-
   cps E1 (f\ cps E2 (arg\ c_app f arg K) Out) Out.
 
 % ---------------------------------------------------------------------------
-% Example queries:
-%   ?- to_anf (plus_e (cst 1) (cst 2)) A.
-%      A = a_let (a_plus (a_int 1) (a_int 2)) (r\ a_ret r)
-%
-%   ?- to_anf (plus_e (mul_e (cst 2) (cst 3)) (cst 4)) A.
-%      A = a_let (a_mul (a_int 2) (a_int 3)) (r\ a_let (a_plus r (a_int 4)) (r1\ a_ret r1))
-%
-%   ?- to_cps (plus_e (cst 10) (cst 20)) C.
-%      C = c_add (c_num 10) (c_num 20) (v\ c_halt v)
+% Example queries
+query succeeds ? to_anf (plus_e (cst 1) (cst 2)) A.
+query succeeds ? to_anf (plus_e (mul_e (cst 2) (cst 3)) (cst 4)) A.
+query succeeds ? to_cps (plus_e (cst 10) (cst 20)) C.

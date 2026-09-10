@@ -67,16 +67,14 @@ cat_options (some X :: Rest) (X :: Out) :- cat_options Rest Out.
 option_all _ none.
 option_all P (some X) :- P X.
 
-% ---------------------------------------------------------------------------
-% Examples
-%   ?- is_none none.
-%   ?- is_some (some 3) X.
-%   ?- from_option 0 none Y.                   % Y = 0
-%   ?- from_option 0 (some 4) Y.               % Y = 4
-%   ?- map_option (x\ x) (some 1) R.
-%   ?- filter_option (x\ x > 2) (some 3) R.    % R = some 3
-%   ?- filter_option (x\ x > 2) (some 1) R.    % R = none
-%   ?- or_else_option none (some 5) R.         % R = some 5
-%   ?- to_list (some 7) L.                     % L = 7 :: nil
-%   ?- from_list_first (1 :: 2 :: nil) R.      % R = some 1
-%   ?- option_of (x\ x = 2) X R.
+query succeeds ? is_none none.
+query succeeds ? is_some (some 3) X.
+query succeeds ? from_option 0 none Y.
+query succeeds ? from_option 0 (some 4) Y.
+query succeeds ? map_option (x\ x) (some 1) R.
+query succeeds ? filter_option (x\ x > 2) (some 3) R.
+query succeeds ? filter_option (x\ x > 2) (some 1) R.
+query succeeds ? or_else_option none (some 5) R.
+query succeeds ? to_list (some 7) L.
+query succeeds ? from_list_first (1 :: 2 :: nil) R.
+query succeeds ? option_of (x\ x = 2) X R.

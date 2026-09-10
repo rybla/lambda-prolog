@@ -101,12 +101,8 @@ match_transitions S1 S2 :-
   state_bisim Next1 Next2.
 
 % ---------------------------------------------------------------------------
-% Example queries:
-%   ?- bisimilar s_zeroes (s_cons 0 s_zeroes).
-%      yes
-%   ?- bisimilar s_alt01 (s_cons 0 (s_cons 1 s_alt01)).
-%      yes
-%   ?- take_stream 4 s_alt01 L.
-%      L = 0 :: 1 :: 0 :: 1 :: nil
-%   ?- state_bisim p0 q0.
-%      yes
+% Example queries
+query succeeds ? bisimilar s_zeroes (s_cons 0 s_zeroes).
+query succeeds ? bisimilar s_alt01 (s_cons 0 (s_cons 1 s_alt01)).
+query succeeds ? take_stream 4 s_alt01 L.
+query succeeds ? state_bisim p0 q0.
