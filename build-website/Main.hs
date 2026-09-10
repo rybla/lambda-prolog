@@ -63,6 +63,8 @@ nav root =
       el "a" [("href", root <> "index.html")] (txt "λProlog")
         <> txt " · "
         <> el "a" [("href", root <> "examples/index.html")] (txt "Examples")
+        <> txt " · "
+        <> el "a" [("href", "https://github.com/rybla/lambda-prolog")] (txt "GitHub")
 
 indexPage :: Html
 indexPage =
@@ -144,7 +146,14 @@ examplePage ex =
         []
         ( el "h1" [] (txt (hdrTitle (exHeader ex)))
             <> el "p" [] (txt (hdrSummary (exHeader ex)))
-            <> el "p" [("class", "muted")] (txt (T.pack (exFile ex)))
+            <> el
+              "p"
+              [("class", "muted")]
+              ( el
+                  "a"
+                  [("href", "https://github.com/rybla/lambda-prolog/blob/main/examples/" <> T.pack (exFile ex))]
+                  (txt (T.pack (exFile ex)))
+              )
             <> el
               "p"
               [("class", "legend")]
