@@ -43,3 +43,4 @@ and this project adheres to the
 - Compound goal terms (`once (true, true)`, `once (pi x\ …)`) were searched
   as ordinary atoms instead of being reread as connectives
 - `^` was not a symbolic identifier, so `"ab" ^ "cd"` would not parse
+- Multi-line module header metadata: indented continuation lines following a metadata key are now parsed into that key's value

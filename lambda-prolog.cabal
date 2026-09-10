@@ -76,6 +76,7 @@ library
       LambdaProlog.Surface.Annotate
       LambdaProlog.Surface.Elab
       LambdaProlog.Surface.Fixity
+      LambdaProlog.Surface.Metadata
       LambdaProlog.Surface.Module
       LambdaProlog.Surface.Parser
       LambdaProlog.Surface.Syntax

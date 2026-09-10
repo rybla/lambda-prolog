@@ -4,7 +4,7 @@ module WebsiteSpec (tests) where
 import Data.Text (Text)
 import Data.Text qualified as T
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (assertBool, testCase)
+import Test.Tasty.HUnit (assertBool, assertEqual, testCase)
 
 import LambdaProlog.Surface.Annotate
   ( Mark (..)
@@ -12,6 +12,10 @@ import LambdaProlog.Surface.Annotate
   , annotateSource
   , markRole
   , markTip
+  )
+import LambdaProlog.Surface.Metadata
+  ( Header (..)
+  , parseHeader
   )
 
 tests :: TestTree
@@ -68,6 +72,82 @@ tests =
                   , "p X :- pi x\\ p x."
                   ]
          in assertBool "binder x" (hasRole RBinder "x" ms)
+    , testCase "header metadata with indented continuation lines is parsed" $
+        let src =
+              T.unlines
+                [ "% title: HOAS and de Bruijn Conversion"
+                , "% tags: hoas, debruijn,"
+                , "%   syntax, representation, hypothetical"
+                , "% summary: Bidirectional conversion between Higher-Order Abstract Syntax (HOAS)"
+                , "%   and first-order de Bruijn indexed terms using hypothetical reasoning,"
+                , "%   along with shifting, substitution, and evaluation on de Bruijn terms."
+                , ""
+                , "module debruijn."
+                ]
+            hdr = parseHeader src
+         in do
+              assertEqual "title" "HOAS and de Bruijn Conversion" (hdrTitle hdr)
+              assertEqual "tags" ["hoas", "debruijn", "syntax", "representation", "hypothetical"] (hdrTags hdr)
+              assertEqual
+                "summary"
+                "Bidirectional conversion between Higher-Order Abstract Syntax (HOAS) and first-order de Bruijn indexed terms using hypothetical reasoning, along with shifting, substitution, and evaluation on de Bruijn terms."
+                (hdrSummary hdr)
+    , testCase "metadata value starting on indented lines" $
+        let src =
+              T.unlines
+                [ "% title: Test"
+                , "% summary:"
+                , "%   Line one."
+                , "%   Line two."
+                , "module t."
+                ]
+            hdr = parseHeader src
+         in assertEqual "summary" "Line one. Line two." (hdrSummary hdr)
+    , testCase "indented line with a colon is not treated as a new field" $
+        let src =
+              T.unlines
+                [ "% summary: Features include:"
+                , "%   feature 1: alpha"
+                , "%   feature 2: beta"
+                , "module t."
+                ]
+            hdr = parseHeader src
+         in assertEqual "summary" "Features include: feature 1: alpha feature 2: beta" (hdrSummary hdr)
+    , testCase "unindented comment terminates continuation lines" $
+        let src =
+              T.unlines
+                [ "% summary: First line."
+                , "%   Second line."
+                , "% Unindented comment."
+                , "module t."
+                ]
+            hdr = parseHeader src
+         in assertEqual "summary" "First line. Second line." (hdrSummary hdr)
+    , testCase "block comment metadata with indented continuation lines" $
+        let src =
+              T.unlines
+                [ "/*"
+                , " * title: Block Title"
+                , " * tags: one, two"
+                , " * summary: Block summary line 1"
+                , " *   and continuation line"
+                , " */"
+                , "module t."
+                ]
+            hdr = parseHeader src
+         in do
+              assertEqual "title" "Block Title" (hdrTitle hdr)
+              assertEqual "tags" ["one", "two"] (hdrTags hdr)
+              assertEqual "summary" "Block summary line 1 and continuation line" (hdrSummary hdr)
+    , testCase "comments after module declaration are not treated as header metadata" $
+        let src =
+              T.unlines
+                [ "% title: Real Title"
+                , "module t."
+                , "% title: Fake Title"
+                ]
+            hdr = parseHeader src
+         in assertEqual "title" "Real Title" (hdrTitle hdr)
     ]
   where
     sample =

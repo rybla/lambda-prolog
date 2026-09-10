@@ -17,29 +17,10 @@ import LambdaProlog.Surface.Annotate
   , annotateSource
   , roleClass
   )
-
-data Header = Header
-  { hdrTitle :: Text
-  , hdrTags :: [Text]
-  , hdrSummary :: Text
-  }
-
-parseHeader :: Text -> Header
-parseHeader src =
-  let ls = take 10 (T.lines src)
-      grab key =
-        let p = "% " <> key <> ":"
-         in case [T.strip (T.drop (T.length p) l) | l <- ls, p `T.isPrefixOf` l] of
-              (x : _) -> x
-              [] -> ""
-      tags = [t | t <- T.splitOn "," (grab "tags"), not (T.null (T.strip t))]
-   in Header
-        { hdrTitle = nonempty (grab "title") "Example"
-        , hdrTags = map T.strip tags
-        , hdrSummary = nonempty (grab "summary") ""
-        }
-  where
-    nonempty t d = if T.null t then d else t
+import LambdaProlog.Surface.Metadata
+  ( Header (..)
+  , parseHeader
+  )
 
 highlight :: FilePath -> Text -> Html
 highlight file src =
