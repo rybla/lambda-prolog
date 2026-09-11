@@ -9,6 +9,7 @@ import Kernel.TermSpec qualified
 import Kernel.TypeSpec qualified
 import Kernel.UnifySpec qualified
 import Examples.ExamplesSpec qualified
+import Game.GameSpec qualified
 import Surface.ElabSpec qualified
 import Surface.ParseSpec qualified
 import WebsiteSpec qualified
@@ -25,6 +26,7 @@ main =
       , Kernel.SearchSpec.tests
       , Surface.ParseSpec.tests
       , Surface.ElabSpec.tests
+      , Game.GameSpec.tests
       , Examples.ExamplesSpec.tests
       , WebsiteSpec.tests
       ]

@@ -68,6 +68,10 @@ module LambdaProlog
   , loadFileQuiet
   , loadSource
   , runQueryText
+    -- * Game driver
+  , playGame
+  , runGameTurn
+  , initGameSession
     -- * Pretty-printing
   , PrintEnv (..)
   , mkPrintEnv
@@ -79,6 +83,11 @@ module LambdaProlog
   , renderTerm
   ) where
 
+import LambdaProlog.Game
+  ( initGameSession
+  , playGame
+  , runGameTurn
+  )
 import LambdaProlog.Error
   ( Error (..)
   , mkError

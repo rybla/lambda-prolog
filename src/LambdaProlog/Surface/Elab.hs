@@ -6,6 +6,7 @@ module LambdaProlog.Surface.Elab
   , elabModule
   , elabQuery
   , elabQueryWithFrees
+  , elabTermClosed
   , renderSTerm
   ) where
 
@@ -45,8 +46,10 @@ import LambdaProlog.Name (Interner, Name (..), intern, lookupName)
 import LambdaProlog.Prelude
   ( Builtins (..)
   , prelude
+  , tyInt
   , tyList
   , tyO
+  , tyString
   )
 import LambdaProlog.Surface.Fixity (defaultOps, mixfixModule, mixfixTerm)
 import LambdaProlog.Surface.Syntax
@@ -80,6 +83,12 @@ preludeSig =
           , (bPi b, Scheme 1 (tyArrs [TyArr a tyO] tyO))
           , (bSigma b, Scheme 1 (tyArrs [TyArr a tyO] tyO))
           , (bNot b, Scheme 0 (TyArr tyO tyO))
+          , (bPrngNextSeed b, Scheme 0 (TyArr tyInt tyInt))
+          , (bPrngNextVal b, Scheme 0 (TyArr tyInt tyInt))
+          , (bPrngRangeVal b, Scheme 0 (tyArrs [tyInt, tyInt, tyInt] tyInt))
+          , (bToString b, Scheme 1 (TyArr a tyString))
+          , (bStrLen b, Scheme 0 (TyArr tyString tyInt))
+          , (bParseInt b, Scheme 0 (TyArr tyString tyInt))
           ]
    in Sig intern_ tyCons consts
 
@@ -108,6 +117,12 @@ elabQueryWithFrees sg t0 = do
       env = EEnv (Map.fromList [(v, meta mid) | (v, mid) <- mapping]) (length frees)
   g <- elabGoal sg env t
   pure (mapping, g)
+
+-- | Elaborate a closed surface term into a kernel term.
+elabTermClosed :: Sig -> STerm -> Either Error Term
+elabTermClosed sg t0 = do
+  t <- mixfixTerm defaultOps (renameWildcards t0)
+  elabTerm sg (EEnv Map.empty 0) t
 
 --------------------------------------------------------------------------------
 -- Signature declarations

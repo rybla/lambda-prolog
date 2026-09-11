@@ -31,10 +31,12 @@ import LambdaProlog.Driver
   ( Loaded (..)
   , QueryResult (..)
   , loadFile
+  , loadFileQuiet
   , loadSource
   , runQueryN
   )
 import LambdaProlog.Error (Error, renderError)
+import LambdaProlog.Game (playGame)
 import LambdaProlog.Repl (printSolutions, repl)
 
 data Options = Options
@@ -45,6 +47,8 @@ data Options = Options
   , optPaths :: [FilePath]
   , optParseOnly :: Bool
   , optElabOnly :: Bool
+  , optGame :: Bool
+  , optSeed :: Maybe Integer
   , optFiles :: [FilePath]
   }
 
@@ -78,6 +82,15 @@ optionsP =
     <*> manyPath
     <*> switch (long "parse-only" <> help "Parse files and exit")
     <*> switch (long "elab-only" <> help "Elaborate files and exit")
+    <*> switch (long "game" <> short 'g' <> help "Start in interactive game mode")
+    <*> optional
+      ( option
+          auto
+          ( long "seed"
+              <> metavar "INT"
+              <> help "Initial PRNG seed for game mode"
+          )
+      )
     <*> OA.many
       ( strArgument (metavar "FILE" <> help "λProlog module (.mod)")
       )
@@ -106,7 +119,7 @@ main = do
 run :: Options -> IO ()
 run opts = do
   let paths = optPaths opts ++ ["."]
-  loaded <- loadAll paths (optFiles opts)
+  loaded <- loadAll opts paths (optFiles opts)
   case loaded of
     Left e -> TIO.hPutStrLn stderr (renderError e) >> exitFailure
     Right ld ->
@@ -115,16 +128,17 @@ run opts = do
         Nothing
           | optBatch opts -> exitSuccess
           | optParseOnly opts || optElabOnly opts -> exitSuccess
+          | optGame opts -> playGame paths ld (optSeed opts)
           | otherwise -> repl paths ld
 
-loadAll :: [FilePath] -> [FilePath] -> IO (Either Error Loaded)
-loadAll _paths [] =
+loadAll :: Options -> [FilePath] -> [FilePath] -> IO (Either Error Loaded)
+loadAll _opts _paths [] =
   -- Empty program (prelude only).
   pure $
     loadSource "<empty>" "module empty.\n"
-loadAll paths (f : _) = do
-  -- Parse-only / elab-only still go through load for simplicity.
-  loadFile paths f
+loadAll opts paths (f : _)
+  | optGame opts = loadFileQuiet paths f
+  | otherwise = loadFile paths f
 
 runOne :: Options -> Loaded -> T.Text -> IO ()
 runOne opts ld q =
