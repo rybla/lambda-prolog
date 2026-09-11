@@ -18,6 +18,7 @@ import System.IO (hFlush, stdout)
 
 import LambdaProlog.Driver (Loaded (..), QueryResult (..), loadFile, runQueryN)
 import LambdaProlog.Error (renderError)
+import LambdaProlog.Game (playGame)
 import LambdaProlog.Kernel.Pretty (PrintEnv, mkPrintEnv, renderTerm)
 import LambdaProlog.Kernel.Search (Solution (..))
 import LambdaProlog.Kernel.Term (MetaId (..), meta)
@@ -39,9 +40,16 @@ repl searchPath loaded0 = runInputT defaultSettings (loop searchPath loaded0)
                 [ "  <goal>.          solve a query"
                 , "  :load FILE       load a module"
                 , "  :reload          reload last file"
+                , "  :game            start game shell on loaded module"
                 , "  :help            this message"
                 , "  :quit            exit"
                 ]
+          loop paths loaded
+        Just ":game" -> do
+          liftIO $ playGame paths loaded Nothing
+          loop paths loaded
+        Just ":play" -> do
+          liftIO $ playGame paths loaded Nothing
           loop paths loaded
         Just (':':'l':'o':'a':'d':' ':fp) -> do
           r <- liftIO $ loadFile paths fp

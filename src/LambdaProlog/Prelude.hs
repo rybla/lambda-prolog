@@ -49,6 +49,13 @@ data Builtins = Builtins
   , bUMinus :: Name
   , bConcat :: Name
   , bNot :: Name
+  , -- prng & string builtins
+    bPrngNextSeed :: Name
+  , bPrngNextVal :: Name
+  , bPrngRangeVal :: Name
+  , bToString :: Name
+  , bStrLen :: Name
+  , bParseInt :: Name
   }
 
 preludeNames :: [Text]
@@ -82,6 +89,12 @@ preludeNames =
   , "~"
   , "^"
   , "not"
+  , "prng_next_seed"
+  , "prng_next_val"
+  , "prng_range_val"
+  , "to_string"
+  , "string_length"
+  , "parse_int"
   ]
 
 prelude :: Builtins
@@ -119,6 +132,12 @@ prelude =
         , bUMinus = at 26
         , bConcat = at 27
         , bNot = at 28
+        , bPrngNextSeed = at 29
+        , bPrngNextVal = at 30
+        , bPrngRangeVal = at 31
+        , bToString = at 32
+        , bStrLen = at 33
+        , bParseInt = at 34
         }
 
 tyO :: Type
