@@ -264,6 +264,60 @@ tests =
     , succeeds "option.mod" "cat_options (some 1 :: none :: some 3 :: nil) (1 :: 3 :: nil)"
     , succeeds "hypothetical.mod" "safe_path a d"
     , fails "hypothetical.mod" "(blocked a b) => safe_path a d"
+    -- System F
+    , succeeds "system_f.mod" "poly_id Id, poly_id_ty Ty, typeof Id Ty"
+    , succeeds "system_f.mod" "poly_id Id, eval (app_tm (tapp_tm Id int_ty) (int_tm 42)) (int_tm 42)"
+    , succeeds "system_f.mod" "poly_id Id, preserves (app_tm (tapp_tm Id int_ty) (int_tm 42))"
+    -- System F<:
+    , succeeds "f_sub.mod" "sub (arr_ty top_ty int_ty) (arr_ty int_ty top_ty)"
+    , fails "f_sub.mod" "sub (arr_ty int_ty top_ty) (arr_ty top_ty int_ty)"
+    , succeeds "f_sub.mod" "sub (all_ty int_ty (x\\ arr_ty x int_ty)) (all_ty int_ty (x\\ arr_ty x int_ty))"
+    -- Bidirectional Type Checking
+    , succeeds "bidirectional.mod" "check_ty (lam_tm (x\\ x)) (arr_ty int_ty int_ty)"
+    , succeeds "bidirectional.mod" "check_ty (nat_tm 5) int_ty"
+    , succeeds "bidirectional.mod" "check_ty (pair_tm (nat_tm 3) true_tm) (prod_ty int_ty bool_ty)"
+    -- Linear Types
+    , succeeds "linear_types.mod" "lin_closed (llam coin_lty (c\\ c)) (lolli coin_lty coin_lty)"
+    , succeeds "linear_types.mod" "lin_closed (llam coin_lty (c\\ spend_coin c)) (lolli coin_lty (base_lty \"receipt\"))"
+    , fails "linear_types.mod" "lin_closed (llam coin_lty (_\\ done_ltm)) (lolli coin_lty (base_lty \"unit\"))"
+    , fails "linear_types.mod" "lin_closed (llam coin_lty (c\\ pair_ltm (spend_coin c) (spend_coin c))) (lolli coin_lty (tensor_ty (base_lty \"receipt\") (base_lty \"receipt\")))"
+    -- Dependent Types / Lambda-Pi
+    , succeeds "dependent_types.mod" "conv_ty (vec_dty bool_dty (plus_dtm zero_dtm (succ_dtm zero_dtm))) (vec_dty bool_dty (succ_dtm zero_dtm))"
+    , succeeds "dependent_types.mod" "of_dtm (app_dtm (lam_dtm nat_dty (x\\ x)) (succ_dtm zero_dtm)) nat_dty"
+    -- Small-Step SOS
+    , succeeds "small_step.mod" "step (app_tm (abs_tm int_ty (x\\ x)) (int_tm 42)) (int_tm 42)"
+    , succeeds "small_step.mod" "steps (if_tm (if_tm true_tm false_tm true_tm) (int_tm 1) (int_tm 2)) (int_tm 2)"
+    , succeeds "small_step.mod" "is_stuck (app_tm (int_tm 42) true_tm)"
+    -- CEK Machine
+    , succeeds "cek_machine.mod" "cek_eval (add_e (cst_e 10) (cst_e 20)) (v_int 30)"
+    , succeeds "cek_machine.mod" "cek_sound (app_e (app_e (abs_e \"x\" (abs_e \"y\" (add_e (var_e \"x\") (var_e \"y\")))) (cst_e 15)) (cst_e 25))"
+    -- Lazy Evaluation
+    , succeeds "lazy_eval.mod" "run_lazy (l_let (l_num 5) (x\\ l_add x x)) (v_num 10)"
+    , succeeds "lazy_eval.mod" "eval_lazy nil (l_let (l_add (l_num 10) (l_num 20)) (x\\ l_add x x)) FinalH (v_num 60), is_memoized FinalH 1"
+    -- Pi-Calculus
+    , succeeds "pi_calculus.mod" "reacts (par_p (out_p c_pub c_data nil_p) (in_p c_pub (y\\ out_p y c_ack nil_p))) (par_p nil_p (out_p c_data c_ack nil_p))"
+    , succeeds "pi_calculus.mod" "reacts (par_p (nu_p (s\\ out_p c_pub s nil_p)) (in_p c_pub (z\\ out_p z c_ack nil_p))) (nu_p (s\\ par_p nil_p (out_p s c_ack nil_p)))"
+    -- Session Types
+    , succeeds "session_types.mod" "dual_st (send_st int_bt (recv_st bool_bt end_st)) (recv_st int_bt (send_st bool_bt end_st))"
+    , succeeds "session_types.mod" "session_safe ep_client ep_server (send_st int_bt (recv_st bool_bt end_st)) (send_p ep_client (m_int 42) (recv_p ep_client (_\\ inact_p))) (recv_p ep_server (_\\ send_p ep_server (m_bool \"true\") inact_p))"
+    , fails "session_types.mod" "session_safe ep_client ep_server (send_st int_bt end_st) (send_p ep_client (m_int 1) inact_p) (send_p ep_server (m_int 2) inact_p)"
+    -- Hoare Logic
+    , succeeds "hoare_logic.mod" "vcg (c_assign \"x\" (a_plus (a_var \"x\") (a_num 1))) (p_eq (a_var \"x\") (a_num 6)) (p_eq (a_plus (a_var \"x\") (a_num 1)) (a_num 6)) nil"
+    , succeeds "hoare_logic.mod" "swap_cmd Swap, vcg Swap (p_and (p_eq (a_var \"x\") (a_num 20)) (p_eq (a_var \"y\") (a_num 10))) (p_and (p_eq (a_var \"y\") (a_num 20)) (p_eq (a_var \"x\") (a_num 10))) nil"
+    -- Separation Logic
+    , succeeds "separation_logic.mod" "sat_sep (m_cell (loc_id 1) (v_int 10) :: m_cell (loc_id 2) (v_int 20) :: nil) (star (points_to (loc_id 1) (v_int 10)) (points_to (loc_id 2) (v_int 20)))"
+    , fails "separation_logic.mod" "sat_sep (m_cell (loc_id 1) (v_int 10) :: nil) (star (points_to (loc_id 1) (v_int 10)) (points_to (loc_id 1) (v_int 10)))"
+    , succeeds "separation_logic.mod" "H = (m_cell (loc_id 1) (v_int 100) :: m_cell (loc_id 2) (v_int 555) :: nil), verify_frame H (points_to (loc_id 1) (v_int 100)) (h_store (loc_id 1) (v_int 999)) (points_to (loc_id 1) (v_int 999)) (points_to (loc_id 2) (v_int 555))"
+    -- 0-CFA
+    , succeeds "cfa0.mod" "E = (c_app (c_lam \"x\" (c_var \"x\" (lab_id \"l_x\")) (lab_id \"lam_id\")) (c_num 42 (lab_id \"l_42\")) (lab_id \"app_1\")), call_graph E (lab_id \"app_1\") (lab_id \"lam_id\")"
+    , succeeds "cfa0.mod" "F1 = (c_lam \"x\" (c_var \"x\" (lab_id \"x\")) (lab_id \"lam_1\")), F2 = (c_lam \"y\" (c_var \"y\" (lab_id \"y\")) (lab_id \"lam_2\")), Branch = (c_if (c_num 1 (lab_id \"c\")) F1 F2 (lab_id \"if_site\")), Call = (c_app Branch (c_num 5 (lab_id \"arg\")) (lab_id \"call_branch\")), call_graph Call (lab_id \"call_branch\") (lab_id \"lam_1\")"
+    -- Security Types
+    , succeeds "security_types.mod" "(var_sec \"public_out\" sec_low) => secure_prog (s_assign \"public_out\" (s_add (s_var \"public_out\") (s_num 1)))"
+    , fails "security_types.mod" "(var_sec \"public_out\" sec_low, var_sec \"secret_key\" sec_high) => secure_prog (s_assign \"public_out\" (s_var \"secret_key\"))"
+    , fails "security_types.mod" "(var_sec \"public_out\" sec_low, var_sec \"secret_key\" sec_high) => secure_prog (s_if (s_eq (s_var \"secret_key\") (s_num 0)) (s_assign \"public_out\" (s_num 0)) (s_assign \"public_out\" (s_num 1)))"
+    -- Closure Conversion
+    , succeeds "closure_conversion.mod" "teval nil (t_app (t_pack (t_code \"$env\" \"y\" (t_add (t_env_ref \"$env\" 1) (t_var \"y\"))) (t_cst 5 :: nil)) (t_cst 10)) (tv_int 15)"
+    , succeeds "closure_conversion.mod" "cc_adder AddSrc AddTarget, SourceApp = (s_app (s_app AddSrc (s_cst 15)) (s_cst 25)), TargetApp = (t_app (t_app AddTarget (t_cst 15)) (t_cst 25)), verify_cc SourceApp TargetApp 40"
     , moduleQueries
     ]
   where
@@ -290,29 +344,44 @@ tests =
 
     allExamples =
       [ "assoc.mod"
+      , "bidirectional.mod"
+      , "cek_machine.mod"
+      , "cfa0.mod"
+      , "closure_conversion.mod"
       , "coinduction.mod"
       , "combinators.mod"
       , "control.mod"
       , "cps_anf.mod"
       , "dcg.mod"
       , "debruijn.mod"
+      , "dependent_types.mod"
+      , "f_sub.mod"
       , "fol_prover.mod"
       , "hidden_reverse.mod"
       , "hoas_lambda.mod"
+      , "hoare_logic.mod"
       , "hopu_meta.mod"
       , "hypothetical.mod"
       , "interp_scope.mod"
+      , "lazy_eval.mod"
+      , "linear_types.mod"
       , "lists.mod"
       , "maps.mod"
       , "modal_logic.mod"
       , "nat.mod"
       , "natural_deduction.mod"
       , "option.mod"
+      , "pi_calculus.mod"
       , "prenex.mod"
       , "result.mod"
+      , "security_types.mod"
+      , "separation_logic.mod"
+      , "session_types.mod"
       , "sets.mod"
+      , "small_step.mod"
       , "stlc.mod"
       , "strings.mod"
+      , "system_f.mod"
       , "tacticals.mod"
       , "trees.mod"
       , "tutorial.mod"

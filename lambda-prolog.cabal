@@ -20,29 +20,44 @@ extra-source-files:
     README.md
     CHANGELOG.md
     examples/assoc.mod
+    examples/bidirectional.mod
+    examples/cek_machine.mod
+    examples/cfa0.mod
+    examples/closure_conversion.mod
     examples/coinduction.mod
     examples/combinators.mod
     examples/control.mod
     examples/cps_anf.mod
     examples/dcg.mod
     examples/debruijn.mod
+    examples/dependent_types.mod
+    examples/f_sub.mod
     examples/fol_prover.mod
     examples/hidden_reverse.mod
+    examples/hoare_logic.mod
     examples/hoas_lambda.mod
     examples/hopu_meta.mod
     examples/hypothetical.mod
     examples/interp_scope.mod
+    examples/lazy_eval.mod
+    examples/linear_types.mod
     examples/lists.mod
     examples/maps.mod
     examples/modal_logic.mod
     examples/nat.mod
     examples/natural_deduction.mod
     examples/option.mod
+    examples/pi_calculus.mod
     examples/prenex.mod
     examples/result.mod
+    examples/security_types.mod
+    examples/separation_logic.mod
+    examples/session_types.mod
     examples/sets.mod
+    examples/small_step.mod
     examples/stlc.mod
     examples/strings.mod
+    examples/system_f.mod
     examples/tacticals.mod
     examples/trees.mod
     examples/tutorial.mod
