@@ -77,6 +77,82 @@ render_board3 ((R11 :: R12 :: R13 :: nil) :: (R21 :: R22 :: R23 :: nil) :: (R31 
   L3 is L2 ^ Div ^ Row3 ^ "\n",
   Out is L3 ^ Div.
 
+% --- Modular UI Component Framework ---
+type repeat_str       string -> int -> string -> o.
+type pad_right        string -> int -> string -> o.
+type clamp_int        int -> int -> int -> int -> o.
+type render_bar       string -> int -> int -> int -> string -> o.
+type render_panel_box string -> int -> list string -> list string -> o.
+type h_stack_lines    int -> string -> list string -> list string -> list string -> o.
+
+repeat_str _ 0 "" :- !.
+repeat_str S N Out :-
+  N > 0, M is N - 1,
+  repeat_str S M Rest,
+  Out is S ^ Rest.
+
+pad_right S TargetLen Out :-
+  L is string_length S,
+  Diff is TargetLen - L,
+  Diff > 0, !,
+  repeat_str " " Diff Spaces,
+  Out is S ^ Spaces.
+pad_right S _ S.
+
+clamp_int Val Low High Res :-
+  Val < Low, !, Res = Low.
+clamp_int Val Low High Res :-
+  Val > High, !, Res = High.
+clamp_int Val _ _ Val.
+
+render_bar Label Cur Max Width Out :-
+  clamp_int Cur 0 Max ClampedCur,
+  (Max > 0, Filled is (ClampedCur * Width) div Max ; Max =< 0, Filled = 0),
+  Empty is Width - Filled,
+  repeat_str "=" Filled FillStr,
+  repeat_str "." Empty EmptyStr,
+  P1 is Label ^ ": [" ^ FillStr,
+  P2 is P1 ^ EmptyStr ^ "] ",
+  P3 is P2 ^ to_string ClampedCur ^ "/",
+  Out is P3 ^ to_string Max.
+
+type box_body_lines   int -> list string -> list string -> o.
+box_body_lines _ nil nil.
+box_body_lines Width (L :: Ls) (OutLine :: Rest) :-
+  pad_right L Width Padded,
+  OutLine is "| " ^ Padded ^ " |",
+  box_body_lines Width Ls Rest.
+
+render_panel_box Title InnerWidth BodyLines OutLines :-
+  TTitle is " " ^ Title ^ " ",
+  TLen is string_length TTitle,
+  RemDashes is InnerWidth - TLen,
+  (RemDashes >= 0, repeat_str "-" RemDashes D1, TopDashes is "--[" ^ TTitle ^ "]" ^ D1 ;
+   RemDashes < 0, repeat_str "-" InnerWidth TopDashes),
+  TopLine is "+-" ^ TopDashes ^ "-+",
+  repeat_str "-" InnerWidth BotDashes,
+  BottomLine is "+--" ^ BotDashes ^ "--+",
+  box_body_lines InnerWidth BodyLines BoxBodies,
+  append (TopLine :: nil) BoxBodies L1,
+  append L1 (BottomLine :: nil) OutLines.
+
+h_stack_lines _ _ nil nil nil :- !.
+h_stack_lines LeftW Sep (L :: Ls) (R :: Rs) (Combined :: Rest) :-
+  !,
+  pad_right L LeftW PL,
+  Combined is PL ^ Sep ^ R,
+  h_stack_lines LeftW Sep Ls Rs Rest.
+h_stack_lines LeftW Sep nil (R :: Rs) (Combined :: Rest) :-
+  !,
+  repeat_str " " LeftW Blank,
+  Combined is Blank ^ Sep ^ R,
+  h_stack_lines LeftW Sep nil Rs Rest.
+h_stack_lines LeftW Sep (L :: Ls) nil (Combined :: Rest) :-
+  !,
+  pad_right L LeftW PL,
+  Combined is PL ^ Sep,
+  h_stack_lines LeftW Sep Ls nil Rest.
+
 % --- Example Queries ---
 query succeeds ? prng_step 100 S V.
 query succeeds ? prng_range 100 1 6 S V.
@@ -86,3 +162,9 @@ query succeeds ? str_length "lambda" 6.
 query succeeds ? get_cell 2 2 ((1 :: 2 :: 3 :: nil) :: (4 :: 5 :: 6 :: nil) :: (7 :: 8 :: 9 :: nil) :: nil) 5.
 query succeeds ? set_cell 1 1 "X" (("." :: "." :: "." :: nil) :: ("." :: "." :: "." :: nil) :: ("." :: "." :: "." :: nil) :: nil) B.
 query succeeds ? render_board3 (("X" :: "O" :: "X" :: nil) :: ("." :: "X" :: "." :: nil) :: ("O" :: "." :: "O" :: nil) :: nil) Out.
+query succeeds ? repeat_str "=" 4 "====".
+query succeeds ? pad_right "Hero" 8 "Hero    ".
+query succeeds ? render_bar "HP" 14 20 10 "HP: [=======...] 14/20".
+query succeeds ? render_panel_box "STATS" 12 ("HP: 10" :: nil) Lines.
+query succeeds ? h_stack_lines 5 " | " ("A" :: nil) ("B" :: nil) ("A     | B" :: nil).
+
